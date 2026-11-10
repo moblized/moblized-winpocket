@@ -1,6 +1,7 @@
 package com.winlator.core;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.tabs.TabLayout;
+import com.winlator.MainActivity;
 import com.winlator.R;
 import com.winlator.SettingsFragment;
 
@@ -64,13 +66,43 @@ public abstract class AppUtils {
         activity.overridePendingTransition(0, 0);
     }
 
+    /**
+     * WinPocket addition: keeps the home-screen icon in step with the app theme.
+     * The manifest declares one launcher alias per icon; exactly one is enabled at a time.
+     */
+    public static void syncLauncherIcon(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isDark = preferences.getInt("app_theme", SettingsFragment.APP_THEME_DARK) == SettingsFragment.APP_THEME_DARK;
+        PackageManager packageManager = context.getPackageManager();
+        ComponentName darkAlias = new ComponentName(context, "com.winlator.LauncherDark");
+        ComponentName lightAlias = new ComponentName(context, "com.winlator.LauncherLight");
+
+        // enable first, so the app never has zero launcher entries
+        setLauncherAliasEnabled(packageManager, isDark ? darkAlias : lightAlias, true, isDark);
+        setLauncherAliasEnabled(packageManager, isDark ? lightAlias : darkAlias, false, !isDark);
+    }
+
+    private static void setLauncherAliasEnabled(PackageManager packageManager, ComponentName alias, boolean enabled, boolean enabledInManifest) {
+        try {
+            int state = packageManager.getComponentEnabledSetting(alias);
+            boolean isEnabled = state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
+                               (state == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && enabledInManifest);
+            if (isEnabled == enabled) return;
+
+            int newState = enabled ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+            packageManager.setComponentEnabledSetting(alias, newState, PackageManager.DONT_KILL_APP);
+        }
+        catch (RuntimeException e) {}
+    }
+
     public static void restartApplication(Context context) {
         restartApplication(context, null);
     }
 
     public static void restartApplication(Context context, RestartApplicationOptions options) {
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-        Intent mainIntent = Intent.makeRestartActivityTask(intent.getComponent());
+        ComponentName component = intent != null ? intent.getComponent() : new ComponentName(context, MainActivity.class);
+        Intent mainIntent = Intent.makeRestartActivityTask(component);
 
         if (options != null) {
             if (options.selectedMenuItemId > 0) mainIntent.putExtra("selected_menu_item_id", options.selectedMenuItemId);

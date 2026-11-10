@@ -7,9 +7,25 @@
     android:paddingLeft="16dp"
     android:paddingBottom="24dp">
 
-    <ImageView
-        android:layout_width="153dp"
-        android:layout_height="52dp"
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="left|bottom"
-        android:src="@drawable/logo" />
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:text="@string/app_name" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#b0bec5"
+            android:text="@string/based_on_winlator" />
+    </LinearLayout>
 </FrameLayout>

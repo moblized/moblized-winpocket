@@ -19,12 +19,13 @@ public class AboutDialog extends ContentDialog {
             final PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
 
             TextView tvWebpage = findViewById(R.id.TVWebpage);
-            tvWebpage.setText(Html.fromHtml("<a href=\"https://www.winlator.org\">winlator.org</a>", Html.FROM_HTML_MODE_LEGACY));
+            tvWebpage.setText(Html.fromHtml("<a href=\"https://github.com/moblized/winpocket\">github.com/moblized/winpocket</a>", Html.FROM_HTML_MODE_LEGACY));
             tvWebpage.setMovementMethod(LinkMovementMethod.getInstance());
 
             ((TextView)findViewById(R.id.TVAppVersion)).setText(context.getString(R.string.version)+" "+pInfo.versionName);
 
             String creditsAndThirdPartyAppsHTML = String.join("<br />",
+                "Winlator by brunodev85 (<a href=\"https://github.com/brunodev85/winlator\">github.com/brunodev85/winlator</a>), LGPL-2.1. WinPocket is a modified build of it.",
                 "GLIBC Patches by (<a href=\"https://github.com/termux-pacman/glibc-packages\">Termux Pacman</a>)",
                 "Wine (<a href=\"https://www.winehq.org\">winehq.org</a>)",
                 "Box86/Box64 by <a href=\"https://github.com/ptitSeb\">ptitseb</a>",

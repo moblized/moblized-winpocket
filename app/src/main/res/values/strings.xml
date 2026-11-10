@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Winlator</string>
+    <string name="app_name">WinPocket</string>
     <string name="run">Run</string>
     <string name="edit">Edit</string>
     <string name="remove">Remove</string>
@@ -352,10 +352,38 @@
     <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
     <string name="renderer">Renderer</string>
     <string name="default_no_override">Default (No override)</string>
-    <string name="fgs_notification_channel_desc">Keeps Winlator running in the background so a wine session is not interrupted by Android\'s background process management.</string>
+    <string name="fgs_notification_channel_desc">Keeps WinPocket running in the background so a wine session is not interrupted by Android\'s background process management.</string>
     <string name="fgs_notification_content_container_background">A container session is running in the background</string>
     <string name="fgs_notification_content_container_foreground">There is a container session running</string>
-    <string name="fgs_notification_content_else">Winlator is running in the background</string>
+    <string name="fgs_notification_content_else">WinPocket is running in the background</string>
     <string name="save_mem_on_run_from_steam">Save memory on run from Steam</string>
     <string name="present_mode">Present Mode</string>
+    <!-- WinPocket additions -->
+    <string name="game">Game</string>
+    <string name="play">Play</string>
+    <string name="find_game">Find game</string>
+    <string name="choose_exe">Choose .exe</string>
+    <string name="onscreen_touch_controls">On-screen touch controls</string>
+    <string name="compatibility_mode">Compatibility mode (slower, more stable)</string>
+    <string name="saves">Saves</string>
+    <string name="saves_help">Bring your PC progress over, or take it back. On your PC the saves are in AppData\\LocalLow\\Team Cherry. Copy that Team Cherry folder into Download/WinPocket/saves on the phone, then tap Import. Export writes the phone\'s saves to the same place.</string>
+    <string name="import_saves">Import saves</string>
+    <string name="export_saves">Export saves</string>
+    <string name="first_time_setup">First-time setup</string>
+    <string name="first_time_setup_steps">1. On your PC, open Steam, right-click the game, then Manage, then Browse local files.\n2. Copy that whole game folder to this phone\'s Download folder.\n3. Tap Find game, then Play.\n\nThe game itself is not included. You need your own copy.</string>
+    <string name="game_not_found_yet">Game not found yet. Copy the game folder to this phone, then tap Find game.</string>
+    <string name="game_found_at">Found:</string>
+    <string name="game_folder_incomplete">This folder looks incomplete. Copy the whole game folder, including the _Data folder and UnityPlayer.dll.</string>
+    <string name="searching_for_game">Searching for the game...</string>
+    <string name="game_was_not_found">The game was not found on this phone.</string>
+    <string name="pick_an_exe_from_internal_storage">Pick an .exe file through \"Internal storage\" in the file picker.</string>
+    <string name="system_files_are_not_installed_yet">System files are not installed yet. Wait for the installation to finish.</string>
+    <string name="unable_to_create_container">Unable to create the container.</string>
+    <string name="unable_to_prepare_game">Unable to prepare the game shortcut.</string>
+    <string name="press_play_once_first">Press Play once first, so the game container exists.</string>
+    <string name="saves_imported">Saves imported.</string>
+    <string name="saves_exported_to">Saves exported to</string>
+    <string name="no_saves_to_import">No saves found in Download/WinPocket/saves.</string>
+    <string name="no_saves_to_export">There are no saves to export yet.</string>
+    <string name="based_on_winlator">Based on Winlator</string>
 </resources>

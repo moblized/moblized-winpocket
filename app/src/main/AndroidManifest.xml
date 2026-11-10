@@ -17,7 +17,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_dark"
+        android:roundIcon="@mipmap/ic_launcher_dark_round"
         android:appCategory="game"
         android:isGame="true"
         android:extractNativeLibs="true"
@@ -28,12 +29,36 @@
             android:theme="@style/AppThemeDark"
             android:exported="true"
             android:screenOrientation="sensor"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation">
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
+
+        <!-- WinPocket: one launcher entry per icon; AppUtils.syncLauncherIcon enables the one matching the app theme. -->
+        <activity-alias
+            android:name="com.winlator.LauncherDark"
+            android:targetActivity="com.winlator.MainActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_dark"
+            android:roundIcon="@mipmap/ic_launcher_dark_round"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.winlator.LauncherLight"
+            android:targetActivity="com.winlator.MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
 
         <activity android:name="com.winlator.XServerDisplayActivity"
             android:exported="false"

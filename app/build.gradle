@@ -9,11 +9,23 @@ android {
         minSdkVersion 26
         targetSdkVersion 28
         versionCode 33
-        versionName "11.2"
+        versionName "11.2-winpocket.1"
+    }
+
+    // WinPocket: one fixed key, so every CI build installs as an update over the last one.
+    // It only identifies sideloaded builds of this repo; it is not a Play Store upload key.
+    signingConfigs {
+        winpocket {
+            storeFile file('winpocket.keystore')
+            storePassword 'winpocket'
+            keyAlias 'winpocket'
+            keyPassword 'winpocket'
+        }
     }
 
     buildTypes {
         debug {
+            signingConfig signingConfigs.winpocket
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 

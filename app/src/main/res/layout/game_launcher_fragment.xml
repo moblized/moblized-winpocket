@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WinPocket addition (not part of upstream Winlator) -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/TVGameTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/TVGameStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorSecondaryText" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTFindGame"
+                android:text="@string/find_game" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTChooseExe"
+                android:layout_marginLeft="8dp"
+                android:text="@string/choose_exe" />
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/CBTouchControls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/onscreen_touch_controls" />
+
+        <CheckBox
+            android:id="@+id/CBSafeMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/compatibility_mode" />
+
+        <Button
+            style="@style/ButtonPositive"
+            android:id="@+id/BTPlay"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:textSize="18sp"
+            android:text="@string/play" />
+
+        <View style="@style/HorizontalLine"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/saves" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorSecondaryText"
+            android:text="@string/saves_help" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTImportSaves"
+                android:text="@string/import_saves" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTExportSaves"
+                android:layout_marginLeft="8dp"
+                android:text="@string/export_saves" />
+        </LinearLayout>
+
+        <View style="@style/HorizontalLine"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/first_time_setup" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorSecondaryText"
+            android:text="@string/first_time_setup_steps" />
+    </LinearLayout>
+</ScrollView>
