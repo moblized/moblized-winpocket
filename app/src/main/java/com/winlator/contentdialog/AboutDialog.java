@@ -19,7 +19,7 @@ public class AboutDialog extends ContentDialog {
             final PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
 
             TextView tvWebpage = findViewById(R.id.TVWebpage);
-            tvWebpage.setText(Html.fromHtml("<a href=\"https://github.com/moblized/winpocket\">github.com/moblized/winpocket</a>", Html.FROM_HTML_MODE_LEGACY));
+            tvWebpage.setText(Html.fromHtml("<a href=\"https://github.com/moblized/moblized-winpocket\">github.com/moblized/moblized-winpocket</a>", Html.FROM_HTML_MODE_LEGACY));
             tvWebpage.setMovementMethod(LinkMovementMethod.getInstance());
 
             ((TextView)findViewById(R.id.TVAppVersion)).setText(context.getString(R.string.version)+" "+pInfo.versionName);

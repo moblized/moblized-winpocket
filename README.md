@@ -8,7 +8,7 @@ The game is not included. You need your own copy.
 
 ## Install
 
-1. Open the [latest release](https://github.com/moblized/winpocket/releases/tag/latest) on the phone and download `WinPocket.apk`.
+1. Open the [latest release](https://github.com/moblized/moblized-winpocket/releases/tag/latest) on the phone and download `WinPocket.apk`.
 2. Install it. If the official Winlator app is installed, uninstall it first: both apps use the package name `com.winlator`, so only one can be on the phone.
 3. Open WinPocket, allow storage access, and wait for the system files to install.
 
