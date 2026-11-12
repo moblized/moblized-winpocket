@@ -84,7 +84,17 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
             XForm.makeTranslation(xform, -viewTransformation.viewOffsetX, -viewTransformation.viewOffsetY);
             XForm.scale(xform, invAspect, invAspect);
         }
-        else XForm.makeScale(xform, invAspect, invAspect);
+        else {
+            // WinPocket: a stretched picture scales each axis on its own, so touches must too
+            XForm.makeScale(xform, (float)innerWidth / Math.max(1, outerWidth), (float)innerHeight / Math.max(1, outerHeight));
+        }
+    }
+
+    /** WinPocket addition: call after the renderer's stretch mode changes. */
+    public void updateTransformation() {
+        int width = getWidth() > 0 ? getWidth() : AppUtils.getScreenWidth();
+        int height = getHeight() > 0 ? getHeight() : AppUtils.getScreenHeight();
+        updateXform(width, height, xServer.screenInfo.width, xServer.screenInfo.height);
     }
 
     private class Finger {

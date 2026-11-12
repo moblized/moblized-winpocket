@@ -28,6 +28,8 @@ import java.util.Arrays;
 
 public class ControlElement {
     public static final float STICK_DEAD_ZONE = 0.15f;
+    public static final float KEY_STICK_DEAD_ZONE = 0.25f;
+    public static final float KEY_STICK_AXIS_THRESHOLD = 0.5f;
     public static final float DPAD_DEAD_ZONE = 0.3f;
     public static final float STICK_SENSITIVITY = 3.0f;
     public static final float TRACKPAD_MIN_SPEED = 0.8f;
@@ -861,6 +863,13 @@ public class ControlElement {
         else return false;
     }
 
+    private boolean isKeyboardStick() {
+        for (byte i = 0; i < 4; i++) {
+            if (!getBindingAt(i).isKeyboard()) return false;
+        }
+        return true;
+    }
+
     public boolean handleTouchMove(int pointerId, float x, float y) {
         if (pointerId == currentPointerId && (type == Type.D_PAD || type == Type.STICK || type == Type.TRACKPAD)) {
             float deltaX, deltaY;
@@ -897,6 +906,21 @@ public class ControlElement {
                 currentPosition.x = boundingBox.left + deltaX * radius + radius;
                 currentPosition.y = boundingBox.top + deltaY * radius + radius;
                 final boolean[] states = {deltaY <= -STICK_DEAD_ZONE, deltaX >= STICK_DEAD_ZONE, deltaY >= STICK_DEAD_ZONE, deltaX <= -STICK_DEAD_ZONE};
+
+                // WinPocket: a stick bound to keys acts as an 8-way pad. Each main direction covers
+                // 60 degrees, so pushing sideways does not also press up or down by accident.
+                if (isKeyboardStick()) {
+                    float magnitude = (float)Math.hypot(deltaX, deltaY);
+                    if (magnitude >= KEY_STICK_DEAD_ZONE) {
+                        float dirX = deltaX / magnitude;
+                        float dirY = deltaY / magnitude;
+                        states[0] = dirY <= -KEY_STICK_AXIS_THRESHOLD;
+                        states[1] = dirX >= KEY_STICK_AXIS_THRESHOLD;
+                        states[2] = dirY >= KEY_STICK_AXIS_THRESHOLD;
+                        states[3] = dirX <= -KEY_STICK_AXIS_THRESHOLD;
+                    }
+                    else states[0] = states[1] = states[2] = states[3] = false;
+                }
 
                 for (byte i = 0; i < 4; i++) {
                     float value = i == 1 || i == 3 ? deltaX : deltaY;

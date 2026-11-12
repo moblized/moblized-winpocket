@@ -276,6 +276,14 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         xServerView.requestRender();
     }
 
+    /** WinPocket addition: sets stretch-to-fill directly, so it can be on from the first frame. */
+    public void setFullscreen(boolean fullscreen) {
+        this.fullscreen = fullscreen;
+        toggleFullscreen = false;
+        viewportNeedsUpdate = true;
+        xServerView.requestRender();
+    }
+
     private Drawable createRootCursorDrawable() {
         Context context = xServerView.getContext();
         BitmapFactory.Options options = new BitmapFactory.Options();

@@ -158,4 +158,10 @@
         <item>mailbox</item>
         <item>fifo</item>
     </string-array>
+    <!-- WinPocket -->
+    <string-array name="game_screen_mode_entries">
+        <item>@string/screen_mode_wide</item>
+        <item>@string/screen_mode_stretch</item>
+        <item>@string/screen_mode_bars</item>
+    </string-array>
 </resources>

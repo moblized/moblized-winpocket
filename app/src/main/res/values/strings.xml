@@ -386,4 +386,9 @@
     <string name="no_saves_to_import">No saves found in Download/WinPocket/saves.</string>
     <string name="no_saves_to_export">There are no saves to export yet.</string>
     <string name="based_on_winlator">Based on Winlator</string>
+    <string name="screen">Screen</string>
+    <string name="screen_mode_wide">Fill screen (widescreen)</string>
+    <string name="screen_mode_stretch">Fill screen (stretched)</string>
+    <string name="screen_mode_bars">16:9 with black bars</string>
+    <string name="touchscreen_mode">Tap where you touch (no mouse pointer steering)</string>
 </resources>

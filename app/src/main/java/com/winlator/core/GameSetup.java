@@ -3,6 +3,8 @@ package com.winlator.core;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
 
 import androidx.preference.PreferenceManager;
 
@@ -37,6 +39,17 @@ public abstract class GameSetup {
     public static final String PREF_GAME_PATH = "game_exec_path";
     public static final String PREF_TOUCH_CONTROLS = "game_touch_controls";
     public static final String PREF_SAFE_MODE = "game_safe_mode";
+    public static final String PREF_SCREEN_MODE = "game_screen_mode";
+    public static final String PREF_CONTROLS_PROFILE_VERSION = "game_controls_profile_version";
+    /** Raise this when the bundled touch layout changes, so installed copies get replaced. */
+    public static final int CONTROLS_PROFILE_VERSION = 2;
+    /** The container renders at the phone's own shape, so the picture fills the screen. */
+    public static final int SCREEN_MODE_WIDE = 0;
+    /** The container renders at its own size and the picture is stretched over the screen. */
+    public static final int SCREEN_MODE_STRETCH = 1;
+    /** The container renders at its own size with black bars. */
+    public static final int SCREEN_MODE_BARS = 2;
+    private static final String SCREEN_ARGS_PATTERN = "\\s*-screen-(?:width|height|fullscreen)\\s+\\d+";
     private static final String SAVES_RELATIVE_PATH = "AppData/LocalLow/Team Cherry";
     private static final String NORMALIZED_GAME_NAME = "hollowknight";
     private static final byte MAX_SCAN_DEPTH = 5;
@@ -176,7 +189,7 @@ public abstract class GameSetup {
      * per-shortcut settings the user changed. The touch controls and safe mode switches are
      * applied on every call.
      */
-    public static File writeShortcut(Container container, String dosPath, int controlsProfileId, boolean safeMode) {
+    public static File writeShortcut(Container container, String dosPath, int controlsProfileId, boolean safeMode, int screenMode, String wideScreenSize) {
         File file = getShortcutFile(container);
         File desktopDir = file.getParentFile();
         if (!desktopDir.isDirectory() && !desktopDir.mkdirs()) return null;
@@ -205,27 +218,90 @@ public abstract class GameSetup {
         }
 
         Shortcut shortcut = new Shortcut(container, file);
-        if (isNew) shortcut.putExtra("execArgs", DEFAULT_EXEC_ARGS);
+        boolean isWide = screenMode == SCREEN_MODE_WIDE && wideScreenSize != null;
+        String screenSize = isWide ? wideScreenSize : container.getScreenSize();
+        String execArgs = isNew ? DEFAULT_EXEC_ARGS : shortcut.getExtra("execArgs");
+
+        shortcut.putExtra("execArgs", buildExecArgs(execArgs, screenSize));
+        shortcut.putExtra("screenSize", isWide ? wideScreenSize : null);
+        shortcut.putExtra("stretchFullscreen", screenMode == SCREEN_MODE_STRETCH ? "1" : null);
         shortcut.putExtra("controlsProfile", controlsProfileId > 0 ? String.valueOf(controlsProfileId) : null);
         shortcut.putExtra("box64Preset", safeMode ? Box64Preset.STABILITY : null);
         shortcut.saveData();
         return file;
     }
 
-    /** Returns the id of the bundled touch layout, importing it on first use. 0 on failure. */
-    public static int ensureControlsProfile(Context context) {
-        InputControlsManager manager = new InputControlsManager(context);
-        for (ControlsProfile profile : manager.getProfiles()) {
-            if (profile.getName().equals(CONTROLS_PROFILE_NAME)) return profile.id;
+    /**
+     * Keeps whatever arguments the shortcut already has and replaces only the three that tell
+     * the game which size to run at, so it always matches the container's screen.
+     */
+    public static String buildExecArgs(String currentArgs, String screenSize) {
+        String base = (currentArgs != null ? currentArgs : "").replaceAll(SCREEN_ARGS_PATTERN, "").trim();
+        String[] parts = screenSize != null ? screenSize.split("x") : new String[0];
+        if (parts.length != 2) return base;
+
+        String screenArgs = "-screen-fullscreen 1 -screen-width "+parts[0].trim()+" -screen-height "+parts[1].trim();
+        return base.isEmpty() ? screenArgs : base+" "+screenArgs;
+    }
+
+    /**
+     * A screen size with the phone's own proportions, 720 pixels tall. Limited to the range the
+     * game supports: from 16:10 up to 21:9.
+     */
+    public static String getWideScreenSize(Context context) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager windowManager = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
+        windowManager.getDefaultDisplay().getRealMetrics(metrics);
+        return computeWideScreenSize(metrics.widthPixels, metrics.heightPixels);
+    }
+
+    public static String computeWideScreenSize(int displayWidth, int displayHeight) {
+        float longSide = Math.max(displayWidth, displayHeight);
+        float shortSide = Math.max(1, Math.min(displayWidth, displayHeight));
+        float aspect = longSide / shortSide;
+        int width, height;
+
+        if (aspect >= 16.0f / 9.0f) {
+            height = 720;
+            width = Math.min(1680, Math.round(height * aspect / 4.0f) * 4);
         }
+        else {
+            width = 1280;
+            height = Math.min(800, Math.round(width / aspect / 4.0f) * 4);
+        }
+        return width+"x"+height;
+    }
+
+    /**
+     * Returns the id of the bundled touch layout. Imports it on first use, and replaces the
+     * installed copy when a newer layout ships with the app. 0 on failure.
+     */
+    public static int ensureControlsProfile(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isOutdated = preferences.getInt(PREF_CONTROLS_PROFILE_VERSION, 1) < CONTROLS_PROFILE_VERSION;
+        InputControlsManager manager = new InputControlsManager(context);
+        ControlsProfile installed = null;
+
+        for (ControlsProfile profile : manager.getProfiles()) {
+            if (profile.getName().equals(CONTROLS_PROFILE_NAME)) {
+                installed = profile;
+                break;
+            }
+        }
+
+        if (installed != null && !isOutdated) return installed.id;
 
         try {
             JSONObject data = new JSONObject(FileUtils.readString(context, CONTROLS_PROFILE_ASSET));
+            if (installed != null) manager.removeProfile(installed);
             ControlsProfile profile = manager.importProfile(data);
-            return profile != null ? profile.id : 0;
+            if (profile == null) return 0;
+
+            preferences.edit().putInt(PREF_CONTROLS_PROFILE_VERSION, CONTROLS_PROFILE_VERSION).apply();
+            return profile.id;
         }
         catch (Exception e) {
-            return 0;
+            return installed != null ? installed.id : 0;
         }
     }
 

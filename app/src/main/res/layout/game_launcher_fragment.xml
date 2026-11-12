@@ -51,11 +51,31 @@
             android:text="@string/onscreen_touch_controls" />
 
         <CheckBox
+            android:id="@+id/CBTouchscreenMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/touchscreen_mode" />
+
+        <CheckBox
             android:id="@+id/CBSafeMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/compatibility_mode" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/screen" />
+
+        <Spinner
+            style="@style/ComboBox"
+            android:id="@+id/SScreenMode"
+            android:layout_width="match_parent"
+            android:layout_marginTop="4dp"
+            android:entries="@array/game_screen_mode_entries" />
 
         <Button
             style="@style/ButtonPositive"

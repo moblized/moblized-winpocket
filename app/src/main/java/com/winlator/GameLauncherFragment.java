@@ -12,7 +12,9 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CheckBox;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -48,6 +50,7 @@ public class GameLauncherFragment extends Fragment {
     private View btPlay;
     private CheckBox cbTouchControls;
     private CheckBox cbSafeMode;
+    private Spinner sScreenMode;
     private File exeFile;
 
     @Override
@@ -70,6 +73,28 @@ public class GameLauncherFragment extends Fragment {
         cbTouchControls = view.findViewById(R.id.CBTouchControls);
         cbTouchControls.setChecked(preferences.getBoolean(GameSetup.PREF_TOUCH_CONTROLS, true));
         cbTouchControls.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(GameSetup.PREF_TOUCH_CONTROLS, isChecked).apply());
+
+        // Direct touch is on by default from this version on; set once, then the user decides.
+        if (!preferences.getBoolean("game_touchscreen_default_applied", false)) {
+            preferences.edit().putBoolean("move_cursor_to_touchpoint", true).putBoolean("game_touchscreen_default_applied", true).apply();
+        }
+
+        // Same setting as "Move Cursor to Touchpoint" in Settings
+        CheckBox cbTouchscreenMode = view.findViewById(R.id.CBTouchscreenMode);
+        cbTouchscreenMode.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
+        cbTouchscreenMode.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean("move_cursor_to_touchpoint", isChecked).apply());
+
+        sScreenMode = view.findViewById(R.id.SScreenMode);
+        sScreenMode.setSelection(Math.max(0, Math.min(2, preferences.getInt(GameSetup.PREF_SCREEN_MODE, GameSetup.SCREEN_MODE_WIDE))));
+        sScreenMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
+                preferences.edit().putInt(GameSetup.PREF_SCREEN_MODE, position).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         cbSafeMode = view.findViewById(R.id.CBSafeMode);
         cbSafeMode.setChecked(preferences.getBoolean(GameSetup.PREF_SAFE_MODE, false));
@@ -186,7 +211,9 @@ public class GameLauncherFragment extends Fragment {
         final Activity activity = getActivity();
         String dosPath = GameSetup.resolveDosPath(container, exeFile);
         int controlsProfileId = cbTouchControls.isChecked() ? GameSetup.ensureControlsProfile(activity) : 0;
-        File shortcutFile = dosPath != null ? GameSetup.writeShortcut(container, dosPath, controlsProfileId, cbSafeMode.isChecked()) : null;
+        int screenMode = sScreenMode.getSelectedItemPosition();
+        String wideScreenSize = GameSetup.getWideScreenSize(activity);
+        File shortcutFile = dosPath != null ? GameSetup.writeShortcut(container, dosPath, controlsProfileId, cbSafeMode.isChecked(), screenMode, wideScreenSize) : null;
 
         if (shortcutFile == null) {
             AppUtils.showToast(activity, R.string.unable_to_prepare_game);

@@ -370,7 +370,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_toggle_fullscreen:
-                renderer.toggleFullscreen();
+                renderer.setFullscreen(!renderer.isFullscreen());
+                touchpadView.updateTransformation();
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_task_manager:
@@ -587,6 +588,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
         renderer.setForceWindowsFullscreen(shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1"));
+        if (shortcut != null && shortcut.getExtra("stretchFullscreen", "0").equals("1")) renderer.setFullscreen(true); // WinPocket
 
         xServer.setRenderer(renderer);
         rootView.addView(xServerView);
