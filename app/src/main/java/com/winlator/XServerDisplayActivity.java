@@ -611,6 +611,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 touchpadView.isEnabled() && touchpadView.onCapturedPointer(view, event));
         }
         inputControlsView.setXServer(xServer);
+        inputControlsView.setFloatingStick(shortcut != null && shortcut.getExtra("floatingStick", "0").equals("1")); // WinPocket
         inputControlsView.setVisibility(View.GONE);
         rootView.addView(inputControlsView);
 

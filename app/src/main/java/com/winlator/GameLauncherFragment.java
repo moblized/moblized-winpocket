@@ -29,6 +29,7 @@ import com.winlator.core.AppUtils;
 import com.winlator.core.FileUtils;
 import com.winlator.core.GameSetup;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.widget.SeekBar;
 import com.winlator.xenvironment.RootFS;
 
 import org.json.JSONException;
@@ -51,6 +52,8 @@ public class GameLauncherFragment extends Fragment {
     private CheckBox cbTouchControls;
     private CheckBox cbSafeMode;
     private Spinner sScreenMode;
+    private CheckBox cbFloatingStick;
+    private SeekBar sbStickSize;
     private File exeFile;
 
     @Override
@@ -73,6 +76,14 @@ public class GameLauncherFragment extends Fragment {
         cbTouchControls = view.findViewById(R.id.CBTouchControls);
         cbTouchControls.setChecked(preferences.getBoolean(GameSetup.PREF_TOUCH_CONTROLS, true));
         cbTouchControls.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(GameSetup.PREF_TOUCH_CONTROLS, isChecked).apply());
+
+        cbFloatingStick = view.findViewById(R.id.CBFloatingStick);
+        cbFloatingStick.setChecked(preferences.getBoolean(GameSetup.PREF_FLOATING_STICK, true));
+        cbFloatingStick.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(GameSetup.PREF_FLOATING_STICK, isChecked).apply());
+
+        sbStickSize = view.findViewById(R.id.SBStickSize);
+        sbStickSize.setValue(preferences.getInt(GameSetup.PREF_STICK_SIZE, GameSetup.DEFAULT_STICK_SIZE));
+        sbStickSize.setOnValueChangeListener((seekBar, value) -> preferences.edit().putInt(GameSetup.PREF_STICK_SIZE, Math.round(value)).apply());
 
         // Direct touch is on by default from this version on; set once, then the user decides.
         if (!preferences.getBoolean("game_touchscreen_default_applied", false)) {
@@ -211,9 +222,10 @@ public class GameLauncherFragment extends Fragment {
         final Activity activity = getActivity();
         String dosPath = GameSetup.resolveDosPath(container, exeFile);
         int controlsProfileId = cbTouchControls.isChecked() ? GameSetup.ensureControlsProfile(activity) : 0;
+        if (controlsProfileId > 0) GameSetup.applyStickSize(activity, controlsProfileId, Math.round(sbStickSize.getValue()));
         int screenMode = sScreenMode.getSelectedItemPosition();
         String wideScreenSize = GameSetup.getWideScreenSize(activity);
-        File shortcutFile = dosPath != null ? GameSetup.writeShortcut(container, dosPath, controlsProfileId, cbSafeMode.isChecked(), screenMode, wideScreenSize) : null;
+        File shortcutFile = dosPath != null ? GameSetup.writeShortcut(container, dosPath, controlsProfileId, cbSafeMode.isChecked(), screenMode, wideScreenSize, cbFloatingStick.isChecked()) : null;
 
         if (shortcutFile == null) {
             AppUtils.showToast(activity, R.string.unable_to_prepare_game);

@@ -391,4 +391,6 @@
     <string name="screen_mode_stretch">Fill screen (stretched)</string>
     <string name="screen_mode_bars">16:9 with black bars</string>
     <string name="touchscreen_mode">Tap where you touch (no mouse pointer steering)</string>
+    <string name="floating_joystick">Floating joystick (appears where you touch on the left half)</string>
+    <string name="joystick_size">Joystick size</string>
 </resources>

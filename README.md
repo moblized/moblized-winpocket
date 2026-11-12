@@ -23,6 +23,8 @@ The Steam copy starts without the Steam client. Steam Cloud and achievements do 
 ## Controls
 
 - **On-screen touch controls** uses a layout mapped to the game's default keyboard keys, with a joystick for movement. Untick it if you play with a controller.
+- **Floating joystick** puts the joystick under your thumb: touch anywhere on the left half of the screen that is not a button, and it appears there. It returns to its place when you lift your finger.
+- **Joystick size** sets how big the joystick is, from 50% to 250%.
 - **Tap where you touch** makes a tap act at the spot you touch, instead of steering a mouse pointer like a trackpad. It is the same setting as "Move Cursor to Touchpoint" in Settings.
 - A Bluetooth or USB controller works through Winlator's gamepad support.
 - To move or resize the buttons, open the side menu, then Input Controls, and edit the profile "Hollow Knight (touch)". An app update that ships a new layout replaces this profile.
@@ -56,6 +58,7 @@ Changes made to Winlator 11.2 (upstream commit `2c33741`), November 2026:
 - A bundled touch layout, `assets/winpocket/hollow_knight_touch.icp`.
 - Screen modes on the home screen, including a stretch mode that can be on from launch (`GLRenderer.setFullscreen`), and correct touch mapping while stretched (`TouchpadView`).
 - A joystick bound to keys works as an 8-way stick (`ControlElement`).
+- A floating joystick option (`InputControlsView`) and a joystick size setting.
 - New name and launcher icon. The icon has a light and a dark version and follows the app theme in Settings.
 - The Winlator logo is replaced by the app name in the side menu, and About credits Winlator.
 - Builds are signed with one fixed key and built by GitHub Actions.

@@ -60,6 +60,14 @@ public class InputControlsView extends View {
     private Timer mouseMoveTimer;
     private final PointF mouseMoveOffset = new PointF();
     private boolean showTouchscreenControls = true;
+    // WinPocket: floating stick. A touch in the left part of the screen that hits no other
+    // control puts the stick under the finger; it goes back home when the finger lifts.
+    private static final float FLOATING_STICK_ZONE = 0.5f;
+    private boolean floatingStick = false;
+    private ControlElement floatingStickElement;
+    private int floatingStickPointerId = -1;
+    private short floatingStickHomeX;
+    private short floatingStickHomeY;
 
     public InputControlsView(Context context) {
         super(context);
@@ -213,6 +221,50 @@ public class InputControlsView extends View {
             deselectAllElements();
         }
         else this.profile = null;
+    }
+
+    public boolean isFloatingStick() {
+        return floatingStick;
+    }
+
+    public void setFloatingStick(boolean floatingStick) {
+        this.floatingStick = floatingStick;
+    }
+
+    private boolean handleFloatingStickDown(int pointerId, float x, float y) {
+        if (!floatingStick || floatingStickElement != null || x > getWidth() * FLOATING_STICK_ZONE) return false;
+
+        for (ControlElement element : profile.getElements()) {
+            if (element.getType() != ControlElement.Type.STICK) continue;
+            short homeX = element.getX();
+            short homeY = element.getY();
+            element.setX((int)x);
+            element.setY((int)y);
+
+            if (element.handleTouchDown(pointerId, x, y)) {
+                floatingStickElement = element;
+                floatingStickPointerId = pointerId;
+                floatingStickHomeX = homeX;
+                floatingStickHomeY = homeY;
+                invalidate();
+                return true;
+            }
+
+            element.setX(homeX);
+            element.setY(homeY);
+            return false;
+        }
+        return false;
+    }
+
+    private void releaseFloatingStick(int pointerId, float x, float y, boolean force) {
+        if (floatingStickElement == null || (!force && pointerId != floatingStickPointerId)) return;
+        floatingStickElement.handleTouchUp(floatingStickPointerId, x, y);
+        floatingStickElement.setX(floatingStickHomeX);
+        floatingStickElement.setY(floatingStickHomeY);
+        floatingStickElement = null;
+        floatingStickPointerId = -1;
+        invalidate();
     }
 
     public boolean isShowTouchscreenControls() {
@@ -387,6 +439,7 @@ public class InputControlsView extends View {
                             touchpadView.setPointerButtonLeftEnabled(false);
                         }
                     }
+                    if (!handled) handled = handleFloatingStickDown(pointerId, x, y);
                     if (!handled) touchpadView.onTouchEvent(event);
                     break;
                 }
@@ -410,6 +463,7 @@ public class InputControlsView extends View {
                     float x = event.getX(actionIndex);
                     float y = event.getY(actionIndex);
                     for (ControlElement element : profile.getElements()) if (element.handleTouchUp(pointerId, x, y)) handled = true;
+                    releaseFloatingStick(pointerId, x, y, actionMasked == MotionEvent.ACTION_CANCEL);
                     if (!handled) touchpadView.onTouchEvent(event);
                     break;
                 }

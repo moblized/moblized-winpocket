@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- WinPocket addition (not part of upstream Winlator) -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -49,6 +50,28 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/onscreen_touch_controls" />
+
+        <CheckBox
+            android:id="@+id/CBFloatingStick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/floating_joystick" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/joystick_size" />
+
+        <com.winlator.widget.SeekBar
+            android:id="@+id/SBStickSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:suffix="%"
+            app:minValue="50"
+            app:maxValue="250"
+            app:step="10" />
 
         <CheckBox
             android:id="@+id/CBTouchscreenMode"

@@ -18,6 +18,7 @@ import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.widget.FrameRating;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +41,10 @@ public abstract class GameSetup {
     public static final String PREF_TOUCH_CONTROLS = "game_touch_controls";
     public static final String PREF_SAFE_MODE = "game_safe_mode";
     public static final String PREF_SCREEN_MODE = "game_screen_mode";
+    public static final String PREF_FLOATING_STICK = "game_floating_joystick";
+    public static final String PREF_STICK_SIZE = "game_joystick_size";
+    /** Joystick size in percent; matches the scale the bundled layout ships with. */
+    public static final int DEFAULT_STICK_SIZE = 130;
     public static final String PREF_CONTROLS_PROFILE_VERSION = "game_controls_profile_version";
     /** Raise this when the bundled touch layout changes, so installed copies get replaced. */
     public static final int CONTROLS_PROFILE_VERSION = 3;
@@ -189,7 +194,7 @@ public abstract class GameSetup {
      * per-shortcut settings the user changed. The touch controls and safe mode switches are
      * applied on every call.
      */
-    public static File writeShortcut(Container container, String dosPath, int controlsProfileId, boolean safeMode, int screenMode, String wideScreenSize) {
+    public static File writeShortcut(Container container, String dosPath, int controlsProfileId, boolean safeMode, int screenMode, String wideScreenSize, boolean floatingStick) {
         File file = getShortcutFile(container);
         File desktopDir = file.getParentFile();
         if (!desktopDir.isDirectory() && !desktopDir.mkdirs()) return null;
@@ -225,6 +230,7 @@ public abstract class GameSetup {
         shortcut.putExtra("execArgs", buildExecArgs(execArgs, screenSize));
         shortcut.putExtra("screenSize", isWide ? wideScreenSize : null);
         shortcut.putExtra("stretchFullscreen", screenMode == SCREEN_MODE_STRETCH ? "1" : null);
+        shortcut.putExtra("floatingStick", floatingStick ? "1" : null);
         shortcut.putExtra("controlsProfile", controlsProfileId > 0 ? String.valueOf(controlsProfileId) : null);
         shortcut.putExtra("box64Preset", safeMode ? Box64Preset.STABILITY : null);
         shortcut.saveData();
@@ -303,6 +309,34 @@ public abstract class GameSetup {
         catch (Exception e) {
             return installed != null ? installed.id : 0;
         }
+    }
+
+    /** Sets the size of every joystick in an installed layout. Size is in percent. */
+    public static boolean applyStickSize(Context context, int profileId, int sizePercent) {
+        try {
+            File file = ControlsProfile.getProfileFile(context, profileId);
+            JSONObject data = new JSONObject(FileUtils.readString(file));
+            String updated = setStickScale(data, sizePercent / 100.0);
+            return updated == null || FileUtils.writeString(file, updated);
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Returns the new layout text, or null when every joystick already has that scale. */
+    public static String setStickScale(JSONObject data, double scale) throws JSONException {
+        JSONArray elements = data.getJSONArray("elements");
+        boolean changed = false;
+
+        for (int i = 0; i < elements.length(); i++) {
+            JSONObject element = elements.getJSONObject(i);
+            if (element.optString("type").equals("STICK") && Math.abs(element.optDouble("scale", 1.0) - scale) > 0.001) {
+                element.put("scale", scale);
+                changed = true;
+            }
+        }
+        return changed ? data.toString() : null;
     }
 
     /** Copies the container's save folder to Download/WinPocket/saves. Background thread. */
