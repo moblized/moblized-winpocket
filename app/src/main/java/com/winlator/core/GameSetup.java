@@ -42,7 +42,7 @@ public abstract class GameSetup {
     public static final String PREF_SCREEN_MODE = "game_screen_mode";
     public static final String PREF_CONTROLS_PROFILE_VERSION = "game_controls_profile_version";
     /** Raise this when the bundled touch layout changes, so installed copies get replaced. */
-    public static final int CONTROLS_PROFILE_VERSION = 2;
+    public static final int CONTROLS_PROFILE_VERSION = 3;
     /** The container renders at the phone's own shape, so the picture fills the screen. */
     public static final int SCREEN_MODE_WIDE = 0;
     /** The container renders at its own size and the picture is stretched over the screen. */
