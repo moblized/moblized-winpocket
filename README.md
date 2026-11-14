@@ -16,6 +16,15 @@ The games are not included. You need your own copies.
 
 Pick the game at the top of the home screen. Each game has its own container, shortcut, touch layout, settings and saves, so setting one up does not change the other.
 
+## Home screen shortcuts
+
+Once a game is found, tap **Add to home screen** on its screen. The shortcut starts that game straight away, with the settings from its game screen at the time you tap it, so change a setting in WinPocket and the shortcut picks it up.
+
+- The icon is the game's own, read from your copy of the game. If the game has no icon, the tile shows its initials.
+- The tile is dark or light to match WinPocket's theme in Settings, like the WinPocket icon. Switching the theme redraws shortcuts already on the home screen the next time WinPocket opens.
+- If the game is not ready yet (WinPocket's first-time setup is not finished, or the game folder moved), the shortcut opens WinPocket on that game instead.
+- Tapping Add to home screen again for a game already there just refreshes its icon.
+
 ## First-time setup
 
 1. On your PC, open Steam, right-click the game, then Manage, then Browse local files.
@@ -93,6 +102,7 @@ Changes made to Winlator 11.2 (upstream commit `2c33741`), November 2026:
 - New home screen, `GameLauncherFragment`, with `GameSetup`: finds the game folder, creates a container, writes the shortcut, imports and exports saves. `GameProfile` holds what differs between the supported games.
 - Bundled touch layouts, `assets/winpocket/hollow_knight_touch.icp` and `assets/winpocket/schedule_i_touch.icp`.
 - For games tied to Steam, an optional batch launcher (`C:\winpocket\<game>_steam.bat` in the container) that starts the Steam client, waits for a signed-in account, then starts the game. Steam is installed from Valve's own installer.
+- Home-screen game shortcuts (`GameShortcuts`, `GameShortcutActivity`), with the icon read from the game's exe (`ExeIconReader`). Play and the shortcuts share one start-up path (`GameStarter`).
 - A shortcut can turn on relative mouse movement and choose "Move Cursor to Touchpoint" for itself (`XServerDisplayActivity`).
 - Screen modes on the home screen, including a stretch mode that can be on from launch (`GLRenderer.setFullscreen`), and correct touch mapping while stretched (`TouchpadView`).
 - A joystick bound to keys works as an 8-way stick (`ControlElement`).

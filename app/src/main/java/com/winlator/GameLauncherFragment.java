@@ -32,12 +32,12 @@ import com.winlator.core.Callback;
 import com.winlator.core.FileUtils;
 import com.winlator.core.GameProfile;
 import com.winlator.core.GameSetup;
+import com.winlator.core.GameShortcuts;
+import com.winlator.core.GameStarter;
 import com.winlator.core.HttpUtils;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.widget.SeekBar;
 import com.winlator.xenvironment.RootFS;
-
-import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -142,6 +142,7 @@ public class GameLauncherFragment extends Fragment {
         view.findViewById(R.id.BTImportSaves).setOnClickListener((v) -> transferSaves(true));
         view.findViewById(R.id.BTExportSaves).setOnClickListener((v) -> transferSaves(false));
         btPlay.setOnClickListener((v) -> play());
+        view.findViewById(R.id.BTAddToHomeScreen).setOnClickListener((v) -> addToHomeScreen());
 
         Spinner sGame = view.findViewById(R.id.SGame);
         sGame.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, GameProfile.names()));
@@ -275,36 +276,12 @@ public class GameLauncherFragment extends Fragment {
         getActivity().startActivityFromFragment(this, intent, MainActivity.OPEN_FILE_REQUEST_CODE);
     }
 
-    /** Finds this game's container, creating it first when it does not exist yet. */
+    private void showError(int messageResId) {
+        if (isAdded()) AppUtils.showToast(getContext(), messageResId);
+    }
+
     private void withContainer(final Callback<Container> callback) {
-        final Context context = getContext();
-        if (!RootFS.find(context).isValid()) {
-            AppUtils.showToast(context, R.string.system_files_are_not_installed_yet);
-            return;
-        }
-
-        final ContainerManager manager = new ContainerManager(context);
-        Container container = GameSetup.findContainer(manager, game);
-        if (container != null) {
-            callback.call(container);
-            return;
-        }
-
-        try {
-            preloaderDialog.show(R.string.creating_container);
-            manager.createContainerAsync(GameSetup.createContainerData(context, game), (newContainer) -> {
-                preloaderDialog.close();
-                if (!isAdded()) return;
-                if (newContainer != null) {
-                    callback.call(newContainer);
-                }
-                else AppUtils.showToast(context, R.string.unable_to_create_container);
-            });
-        }
-        catch (JSONException e) {
-            preloaderDialog.close();
-            AppUtils.showToast(context, R.string.unable_to_create_container);
-        }
+        GameStarter.withContainer(getActivity(), game, preloaderDialog, callback, this::showError);
     }
 
     private void play() {
@@ -313,38 +290,19 @@ public class GameLauncherFragment extends Fragment {
             updateStatus();
             return;
         }
-        withContainer(this::launch);
+        GameStarter.start(getActivity(), game, preloaderDialog, null, this::showError);
     }
 
-    private void launch(Container container) {
-        final Activity activity = getActivity();
-        String dosPath = GameSetup.resolveDosPath(container, exeFile);
-
-        GameSetup.LaunchOptions options = new GameSetup.LaunchOptions();
-        options.controlsProfileId = cbTouchControls.isChecked() ? GameSetup.ensureControlsProfile(activity, game) : 0;
-        if (options.controlsProfileId > 0) GameSetup.applyStickSize(activity, options.controlsProfileId, Math.round(sbStickSize.getValue()));
-        options.safeMode = cbSafeMode.isChecked();
-        options.screenMode = sScreenMode.getSelectedItemPosition();
-        options.wideScreenSize = GameSetup.getWideScreenSize(activity);
-        options.floatingStick = cbFloatingStick.isChecked();
-        options.touchscreenMode = cbTouchscreenMode.isChecked();
-        options.relativeMouse = cbRelativeMouse.isChecked();
-        options.useSteam = game.supportsSteam() && cbUseSteam.isChecked();
-
-        File shortcutFile = dosPath != null ? GameSetup.writeShortcut(container, game, dosPath, options) : null;
-        if (shortcutFile == null) {
-            AppUtils.showToast(activity, R.string.unable_to_prepare_game);
+    private void addToHomeScreen() {
+        if (exeFile == null || !exeFile.isFile()) {
+            showError(R.string.shortcut_find_game_first);
             return;
         }
-        startShortcut(container, shortcutFile);
+        GameShortcuts.requestPin(getActivity(), game, exeFile);
     }
 
     private void startShortcut(Container container, File shortcutFile) {
-        final Activity activity = getActivity();
-        Intent intent = new Intent(activity, XServerDisplayActivity.class);
-        intent.putExtra("container_id", container.id);
-        intent.putExtra("shortcut_path", shortcutFile.getPath());
-        activity.startActivity(intent);
+        GameStarter.startShortcut(getActivity(), container, shortcutFile);
     }
 
     /** Installs Steam into this game's container, or opens it when it is already there. */

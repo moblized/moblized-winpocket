@@ -128,6 +128,12 @@
             android:textSize="18sp"
             android:text="@string/play" />
 
+        <Button
+            style="@style/ButtonNeutral"
+            android:id="@+id/BTAddToHomeScreen"
+            android:layout_marginTop="8dp"
+            android:text="@string/add_to_home_screen" />
+
         <LinearLayout
             android:id="@+id/LLSteam"
             android:layout_width="match_parent"

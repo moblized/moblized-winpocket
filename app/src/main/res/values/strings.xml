@@ -406,4 +406,10 @@
     <string name="unable_to_download_steam">Could not download the Steam installer. Check your internet connection.</string>
     <string name="steam_setup_hint">Steam installs, then opens and updates itself, which can take several minutes. Sign in and tick Remember me, then use the side menu to Exit.</string>
     <string name="steam_hint">Sign in and tick Remember me. When you are done, use the side menu to Exit.</string>
+    <string name="add_to_home_screen">Add to home screen</string>
+    <string name="play_game">Play %1$s</string>
+    <string name="shortcut_find_game_first">Find the game first, then add it to the home screen.</string>
+    <string name="pin_shortcuts_not_supported">Your home screen app does not support adding shortcuts.</string>
+    <string name="shortcut_already_added">%1$s is already on your home screen. Its icon is up to date.</string>
+    <string name="shortcut_set_up_first">Set up %1$s in WinPocket first.</string>
 </resources>

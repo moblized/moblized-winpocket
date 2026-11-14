@@ -91,8 +91,15 @@ public final class GameProfile {
     }
 
     public static GameProfile byId(String id) {
+        GameProfile game = find(id);
+        return game != null ? game : HOLLOW_KNIGHT;
+    }
+
+    /** The game with this id, or null when there is none. */
+    public static GameProfile find(String id) {
+        if (id == null) return null;
         for (GameProfile game : ALL) if (game.id.equals(id)) return game;
-        return HOLLOW_KNIGHT;
+        return null;
     }
 
     public static String[] names() {
