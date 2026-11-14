@@ -598,6 +598,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         touchpadView = new TouchpadView(this, xServer, capturePointerOnExternalMouse);
         touchpadView.setSensitivity(globalCursorSpeed);
         touchpadView.setMoveCursorToTouchpoint(preferences.getBoolean("move_cursor_to_touchpoint", false));
+        // WinPocket: each game's shortcut can choose these, so a first-person game gets mouse look
+        if (shortcut != null && !shortcut.getExtra("moveCursorToTouchpoint").isEmpty()) {
+            touchpadView.setMoveCursorToTouchpoint(shortcut.getExtra("moveCursorToTouchpoint").equals("1"));
+        }
+        if (shortcut != null && shortcut.getExtra("relativeMouse", "0").equals("1")) xServer.setRelativeMouseMovement(true);
         touchpadView.setFourFingersTapCallback(() -> {
             if (!drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.openDrawer(GravityCompat.START);
         });
