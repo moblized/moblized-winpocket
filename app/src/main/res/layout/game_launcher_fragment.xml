@@ -12,6 +12,18 @@
         android:padding="16dp">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/choose_game" />
+
+        <Spinner
+            style="@style/ComboBox"
+            android:id="@+id/SGame"
+            android:layout_width="match_parent"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
             android:id="@+id/TVGameTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -81,6 +93,13 @@
             android:text="@string/touchscreen_mode" />
 
         <CheckBox
+            android:id="@+id/CBRelativeMouse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/mouse_look" />
+
+        <CheckBox
             android:id="@+id/CBSafeMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -109,6 +128,44 @@
             android:textSize="18sp"
             android:text="@string/play" />
 
+        <LinearLayout
+            android:id="@+id/LLSteam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <View style="@style/HorizontalLine"
+                android:layout_marginTop="20dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="@string/steam" />
+
+            <TextView
+                android:id="@+id/TVSteamStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="14sp"
+                android:textColor="?attr/colorSecondaryText" />
+
+            <CheckBox
+                android:id="@+id/CBUseSteam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/start_steam_with_game" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTSteam"
+                android:layout_marginTop="8dp"
+                android:text="@string/install_steam" />
+        </LinearLayout>
+
         <View style="@style/HorizontalLine"
             android:layout_marginTop="20dp" />
 
@@ -119,12 +176,12 @@
             android:text="@string/saves" />
 
         <TextView
+            android:id="@+id/TVSavesHelp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            android:textColor="?attr/colorSecondaryText"
-            android:text="@string/saves_help" />
+            android:textColor="?attr/colorSecondaryText" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -154,11 +211,11 @@
             android:text="@string/first_time_setup" />
 
         <TextView
+            android:id="@+id/TVFirstTimeSetupSteps"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            android:textColor="?attr/colorSecondaryText"
-            android:text="@string/first_time_setup_steps" />
+            android:textColor="?attr/colorSecondaryText" />
     </LinearLayout>
 </ScrollView>

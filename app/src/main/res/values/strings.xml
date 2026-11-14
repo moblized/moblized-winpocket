@@ -393,4 +393,17 @@
     <string name="touchscreen_mode">Tap where you touch (no mouse pointer steering)</string>
     <string name="floating_joystick">Floating joystick (appears where you touch on the left half)</string>
     <string name="joystick_size">Joystick size</string>
+    <string name="choose_game">Game to play</string>
+    <string name="mouse_look">Mouse look (swipe the right side to turn the camera)</string>
+    <string name="saves_help_schedule_i">Bring your PC progress over, or take it back. On your PC the saves are in AppData\\LocalLow\\TVGS. Copy that TVGS folder into Download/WinPocket/saves on the phone, then tap Import. Export writes the phone\'s saves to the same place. Schedule I keeps each Steam account\'s saves in a folder of their own, so sign in to the same account on both.</string>
+    <string name="first_time_setup_steps_schedule_i">1. On your PC, open Steam, right-click Schedule I, then Manage, then Browse local files.\n2. Copy that whole folder to this phone\'s Download folder.\n3. Tap Find game, then Play.\n4. If the game closes as it starts, set up Steam above.\n\nFor smoother play, set the graphics quality to Low in the game\'s settings. The game itself is not included. You need your own copy.</string>
+    <string name="steam">Steam</string>
+    <string name="start_steam_with_game">Start Steam with the game</string>
+    <string name="install_steam">Install Steam</string>
+    <string name="open_steam">Open Steam</string>
+    <string name="steam_not_installed_help">Schedule I may close as it starts when Steam is not running. If that happens, tap Install Steam. When Steam opens, sign in with the account that owns the game and tick Remember me, then open the side menu and tap Exit. After that, Play starts Steam in the background first.</string>
+    <string name="steam_installed_help">Steam is installed for this game. With Start Steam with the game ticked, Play starts Steam first, waits until you are signed in, then starts the game. Tap Open Steam to sign in or switch accounts.</string>
+    <string name="unable_to_download_steam">Could not download the Steam installer. Check your internet connection.</string>
+    <string name="steam_setup_hint">Steam installs, then opens and updates itself, which can take several minutes. Sign in and tick Remember me, then use the side menu to Exit.</string>
+    <string name="steam_hint">Sign in and tick Remember me. When you are done, use the side menu to Exit.</string>
 </resources>
