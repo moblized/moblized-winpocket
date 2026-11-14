@@ -60,6 +60,16 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- WinPocket: home-screen game shortcuts open this. It starts the game and closes; its own
+             task keeps it out of Recents without hiding the game, which runs in the app's task. -->
+        <activity android:name="com.winlator.GameShortcutActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
+
         <activity android:name="com.winlator.XServerDisplayActivity"
             android:exported="false"
             android:theme="@style/AppThemeFullscreenDark"
