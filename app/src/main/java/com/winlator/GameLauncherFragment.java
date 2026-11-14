@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -28,13 +27,11 @@ import androidx.preference.PreferenceManager;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.core.AppUtils;
-import com.winlator.core.Callback;
 import com.winlator.core.FileUtils;
 import com.winlator.core.GameProfile;
 import com.winlator.core.GameSetup;
 import com.winlator.core.GameShortcuts;
 import com.winlator.core.GameStarter;
-import com.winlator.core.HttpUtils;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.widget.SeekBar;
 import com.winlator.xenvironment.RootFS;
@@ -64,11 +61,6 @@ public class GameLauncherFragment extends Fragment {
     private CheckBox cbFloatingStick;
     private SeekBar sbStickSize;
     private CheckBox cbTouchscreenMode;
-    private CheckBox cbRelativeMouse;
-    private View llSteam;
-    private TextView tvSteamStatus;
-    private CheckBox cbUseSteam;
-    private Button btSteam;
     private File exeFile;
 
     @Override
@@ -104,17 +96,8 @@ public class GameLauncherFragment extends Fragment {
         sbStickSize = view.findViewById(R.id.SBStickSize);
         sbStickSize.setOnValueChangeListener((seekBar, value) -> preferences.edit().putInt(game.pref(GameSetup.PREF_STICK_SIZE), Math.round(value)).apply());
 
-        // Steering a camera and tapping where you touch exclude each other, so only one can be on.
         cbTouchscreenMode = view.findViewById(R.id.CBTouchscreenMode);
-        cbRelativeMouse = view.findViewById(R.id.CBRelativeMouse);
-        cbTouchscreenMode.setOnCheckedChangeListener((v, isChecked) -> {
-            preferences.edit().putBoolean(game.touchscreenModePref(), isChecked).apply();
-            if (isChecked && cbRelativeMouse.isChecked()) cbRelativeMouse.setChecked(false);
-        });
-        cbRelativeMouse.setOnCheckedChangeListener((v, isChecked) -> {
-            putBoolean(GameSetup.PREF_RELATIVE_MOUSE, isChecked);
-            if (isChecked && cbTouchscreenMode.isChecked()) cbTouchscreenMode.setChecked(false);
-        });
+        cbTouchscreenMode.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(game.touchscreenModePref(), isChecked).apply());
 
         sScreenMode = view.findViewById(R.id.SScreenMode);
         sScreenMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -130,13 +113,6 @@ public class GameLauncherFragment extends Fragment {
         cbSafeMode = view.findViewById(R.id.CBSafeMode);
         cbSafeMode.setOnCheckedChangeListener((v, isChecked) -> putBoolean(GameSetup.PREF_SAFE_MODE, isChecked));
 
-        llSteam = view.findViewById(R.id.LLSteam);
-        tvSteamStatus = view.findViewById(R.id.TVSteamStatus);
-        cbUseSteam = view.findViewById(R.id.CBUseSteam);
-        cbUseSteam.setOnCheckedChangeListener((v, isChecked) -> putBoolean(GameSetup.PREF_USE_STEAM, isChecked));
-        btSteam = view.findViewById(R.id.BTSteam);
-        btSteam.setOnClickListener((v) -> setUpSteam());
-
         view.findViewById(R.id.BTFindGame).setOnClickListener((v) -> findGame());
         view.findViewById(R.id.BTChooseExe).setOnClickListener((v) -> chooseExe());
         view.findViewById(R.id.BTImportSaves).setOnClickListener((v) -> transferSaves(true));
@@ -144,7 +120,11 @@ public class GameLauncherFragment extends Fragment {
         btPlay.setOnClickListener((v) -> play());
         view.findViewById(R.id.BTAddToHomeScreen).setOnClickListener((v) -> addToHomeScreen());
 
+        // The picker only shows when WinPocket supports more than one game
         Spinner sGame = view.findViewById(R.id.SGame);
+        int pickerVisibility = GameProfile.ALL.length > 1 ? View.VISIBLE : View.GONE;
+        sGame.setVisibility(pickerVisibility);
+        view.findViewById(R.id.TVChooseGame).setVisibility(pickerVisibility);
         sGame.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, GameProfile.names()));
         game = GameSetup.getSelectedGame(context);
         sGame.setSelection(GameProfile.indexOf(game), false);
@@ -171,13 +151,6 @@ public class GameLauncherFragment extends Fragment {
         ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(R.string.game);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Steam may have been installed while the game screen was open
-        if (game != null && llSteam != null) updateSteamSection();
-    }
-
     private void putBoolean(String key, boolean value) {
         preferences.edit().putBoolean(game.pref(key), value).apply();
     }
@@ -192,35 +165,13 @@ public class GameLauncherFragment extends Fragment {
         cbTouchControls.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_TOUCH_CONTROLS), true));
         cbFloatingStick.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_FLOATING_STICK), true));
         sbStickSize.setValue(preferences.getInt(game.pref(GameSetup.PREF_STICK_SIZE), GameSetup.DEFAULT_STICK_SIZE));
-        boolean relativeMouse = preferences.getBoolean(game.pref(GameSetup.PREF_RELATIVE_MOUSE), game.defaultRelativeMouse);
-        boolean touchscreenMode = !relativeMouse && preferences.getBoolean(game.touchscreenModePref(), game.defaultTouchscreenMode);
-        cbRelativeMouse.setChecked(relativeMouse);
-        cbTouchscreenMode.setChecked(touchscreenMode);
-        // Mouse look only means something in a game that is steered with the mouse
-        cbRelativeMouse.setVisibility(game.defaultRelativeMouse || relativeMouse ? View.VISIBLE : View.GONE);
+        cbTouchscreenMode.setChecked(GameStarter.isTouchscreenMode(preferences, game));
         sScreenMode.setSelection(Math.max(0, Math.min(2, preferences.getInt(game.pref(GameSetup.PREF_SCREEN_MODE), GameSetup.SCREEN_MODE_WIDE))));
         cbSafeMode.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_SAFE_MODE), false));
-        cbUseSteam.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_USE_STEAM), true));
 
         String savedPath = preferences.getString(game.pref(GameSetup.PREF_GAME_PATH), null);
         exeFile = savedPath != null && (new File(savedPath)).isFile() ? new File(savedPath) : null;
         updateStatus();
-        updateSteamSection();
-    }
-
-    private void updateSteamSection() {
-        if (!game.supportsSteam()) {
-            llSteam.setVisibility(View.GONE);
-            return;
-        }
-
-        llSteam.setVisibility(View.VISIBLE);
-        Container container = GameSetup.findContainer(new ContainerManager(getContext()), game);
-        boolean installed = container != null && GameSetup.isSteamInstalled(container);
-        tvSteamStatus.setText(installed ? R.string.steam_installed_help : R.string.steam_not_installed_help);
-        btSteam.setText(installed ? R.string.open_steam : R.string.install_steam);
-        cbUseSteam.setEnabled(installed);
-        cbUseSteam.setAlpha(installed ? 1.0f : 0.5f);
     }
 
     @Override
@@ -280,10 +231,6 @@ public class GameLauncherFragment extends Fragment {
         if (isAdded()) AppUtils.showToast(getContext(), messageResId);
     }
 
-    private void withContainer(final Callback<Container> callback) {
-        GameStarter.withContainer(getActivity(), game, preloaderDialog, callback, this::showError);
-    }
-
     private void play() {
         if (exeFile == null || !exeFile.isFile()) {
             exeFile = null;
@@ -299,61 +246,6 @@ public class GameLauncherFragment extends Fragment {
             return;
         }
         GameShortcuts.requestPin(getActivity(), game, exeFile);
-    }
-
-    private void startShortcut(Container container, File shortcutFile) {
-        GameStarter.startShortcut(getActivity(), container, shortcutFile);
-    }
-
-    /** Installs Steam into this game's container, or opens it when it is already there. */
-    private void setUpSteam() {
-        withContainer((container) -> {
-            final Activity activity = getActivity();
-            String screenSize = GameSetup.getWideScreenSize(activity);
-            String steamDosPath = GameSetup.getSteamDosPath(container);
-
-            if (steamDosPath != null) {
-                File shortcutFile = GameSetup.writeToolShortcut(container, GameSetup.STEAM_SHORTCUT_NAME, steamDosPath, GameSetup.STEAM_ARGS, screenSize);
-                if (shortcutFile == null) {
-                    AppUtils.showToast(activity, R.string.unable_to_prepare_game);
-                    return;
-                }
-                AppUtils.showToast(activity, R.string.steam_hint);
-                startShortcut(container, shortcutFile);
-                return;
-            }
-
-            File winPocketDir = GameSetup.getWinPocketDir(container);
-            if (!winPocketDir.isDirectory() && !winPocketDir.mkdirs()) {
-                AppUtils.showToast(activity, R.string.unable_to_download_steam);
-                return;
-            }
-
-            final File setupFile = new File(winPocketDir, GameSetup.STEAM_SETUP_FILENAME);
-            final Runnable runSetup = () -> {
-                if (!isAdded()) return;
-                String scriptDosPath = GameSetup.writeSteamSetupScript(container);
-                File shortcutFile = scriptDosPath != null ? GameSetup.writeToolShortcut(container, GameSetup.STEAM_SETUP_SHORTCUT_NAME, scriptDosPath, null, screenSize) : null;
-                if (shortcutFile == null) {
-                    AppUtils.showToast(activity, R.string.unable_to_prepare_game);
-                    return;
-                }
-                AppUtils.showToast(activity, R.string.steam_setup_hint);
-                startShortcut(container, shortcutFile);
-            };
-
-            if (setupFile.isFile() && setupFile.length() > 0) {
-                runSetup.run();
-                return;
-            }
-
-            HttpUtils.download(activity, GameSetup.STEAM_SETUP_URL, setupFile, (success) -> {
-                if (success) {
-                    runSetup.run();
-                }
-                else if (isAdded()) AppUtils.showToast(activity, R.string.unable_to_download_steam);
-            });
-        });
     }
 
     private void transferSaves(final boolean isImport) {

@@ -161,6 +161,26 @@ public abstract class GameShortcuts {
     }
 
     /**
+     * Greys out pinned shortcuts for games WinPocket no longer supports, so tapping one explains
+     * why instead of doing nothing. Home screens do not let apps remove a pinned shortcut.
+     */
+    public static void disableRemovedGames(Context context) {
+        ShortcutManager manager = context.getSystemService(ShortcutManager.class);
+        if (manager == null) return;
+
+        try {
+            List<String> removedIds = new ArrayList<>();
+            for (ShortcutInfo shortcut : manager.getPinnedShortcuts()) {
+                String id = shortcut.getId();
+                if (!shortcut.isEnabled() || !id.startsWith(SHORTCUT_ID_PREFIX)) continue;
+                if (GameProfile.find(id.substring(SHORTCUT_ID_PREFIX.length())) == null) removedIds.add(id);
+            }
+            if (!removedIds.isEmpty()) manager.disableShortcuts(removedIds, context.getString(R.string.game_removed_from_winpocket));
+        }
+        catch (RuntimeException e) {}
+    }
+
+    /**
      * Redraws the tiles of pinned game shortcuts when the app theme has changed since they were
      * drawn, so they stay in step with the launcher icon. Cheap when nothing changed.
      */

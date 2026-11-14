@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.main_activity);
         AppUtils.syncLauncherIcon(this);
         GameShortcuts.refreshIconsIfThemeChanged(this); // WinPocket
+        GameShortcuts.disableRemovedGames(this); // WinPocket
 
         drawerLayout = findViewById(R.id.DrawerLayout);
         NavigationView navigationView = findViewById(R.id.NavigationView);

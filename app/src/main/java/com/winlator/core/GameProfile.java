@@ -10,7 +10,7 @@ import com.winlator.R;
 public final class GameProfile {
     public static final GameProfile HOLLOW_KNIGHT = new GameProfile.Builder("hollow_knight", "Hollow Knight")
         .exeName("hollowknight")
-        .controls("Hollow Knight (touch)", "winpocket/hollow_knight_touch.icp", 3)
+        .controls("Hollow Knight (touch)", "winpocket/hollow_knight_touch.icp", 4)
         .execArgs("-force-gfx-direct")
         .saves("AppData/LocalLow/Team Cherry", "Team Cherry", R.string.saves_help)
         .setupSteps(R.string.first_time_setup_steps)
@@ -18,17 +18,7 @@ public final class GameProfile {
         .legacyPreferences()
         .build();
 
-    public static final GameProfile SCHEDULE_I = new GameProfile.Builder("schedule_i", "Schedule I")
-        .exeName("schedulei")
-        .controls("Schedule I (touch)", "winpocket/schedule_i_touch.icp", 1)
-        .execArgs("")
-        .saves("AppData/LocalLow/TVGS", "TVGS", R.string.saves_help_schedule_i)
-        .setupSteps(R.string.first_time_setup_steps_schedule_i)
-        .relativeMouse(true)
-        .steamAppId(3164500)
-        .build();
-
-    public static final GameProfile[] ALL = {HOLLOW_KNIGHT, SCHEDULE_I};
+    public static final GameProfile[] ALL = {HOLLOW_KNIGHT};
 
     /** Stable id, used for preference keys and file names. */
     public final String id;
@@ -47,12 +37,8 @@ public final class GameProfile {
     public final String savesFolderName;
     public final int savesHelpResId;
     public final int setupStepsResId;
-    /** Default for "Tap where you touch". Off suits first-person games, which steer a camera. */
+    /** Default for "Tap where you touch". */
     public final boolean defaultTouchscreenMode;
-    /** Default for "Mouse look". Sends finger movement as relative mouse motion. */
-    public final boolean defaultRelativeMouse;
-    /** Steam app id, or 0 when the game never needs the Steam client. */
-    public final int steamAppId;
     private final boolean legacyPreferences;
 
     private GameProfile(Builder builder) {
@@ -68,13 +54,7 @@ public final class GameProfile {
         savesHelpResId = builder.savesHelpResId;
         setupStepsResId = builder.setupStepsResId;
         defaultTouchscreenMode = builder.defaultTouchscreenMode;
-        defaultRelativeMouse = builder.defaultRelativeMouse;
-        steamAppId = builder.steamAppId;
         legacyPreferences = builder.legacyPreferences;
-    }
-
-    public boolean supportsSteam() {
-        return steamAppId > 0;
     }
 
     /**
@@ -126,8 +106,6 @@ public final class GameProfile {
         private int savesHelpResId;
         private int setupStepsResId;
         private boolean defaultTouchscreenMode = false;
-        private boolean defaultRelativeMouse = false;
-        private int steamAppId = 0;
         private boolean legacyPreferences = false;
 
         Builder(String id, String name) {
@@ -166,16 +144,6 @@ public final class GameProfile {
 
         Builder touchscreenMode(boolean enabled) {
             defaultTouchscreenMode = enabled;
-            return this;
-        }
-
-        Builder relativeMouse(boolean enabled) {
-            defaultRelativeMouse = enabled;
-            return this;
-        }
-
-        Builder steamAppId(int appId) {
-            steamAppId = appId;
             return this;
         }
 

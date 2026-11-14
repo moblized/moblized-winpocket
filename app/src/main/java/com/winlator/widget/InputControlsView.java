@@ -236,6 +236,7 @@ public class InputControlsView extends View {
 
         for (ControlElement element : profile.getElements()) {
             if (element.getType() != ControlElement.Type.STICK) continue;
+            if (element.getX() > getWidth() * FLOATING_STICK_ZONE) continue; // a right-hand stick stays put
             short homeX = element.getX();
             short homeY = element.getY();
             element.setX((int)x);

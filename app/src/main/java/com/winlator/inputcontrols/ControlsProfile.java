@@ -250,6 +250,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                     if (elementJSONObject.has("orientation")) element.setOrientation((byte)elementJSONObject.getInt("orientation"));
                     if (elementJSONObject.has("mouseMoveMode")) element.setMouseMoveMode(true);
                     if (elementJSONObject.has("opacity")) element.setOpacity((float)elementJSONObject.getDouble("opacity"));
+                    if (elementJSONObject.has("color")) element.setColor(parseColor(elementJSONObject.getString("color")));
                 }
 
                 boolean hasGamepadBinding = true;
@@ -267,6 +268,16 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
         }
         catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    /** WinPocket: "#RRGGBB" as an RGB int, or 0 when it does not parse. */
+    private static int parseColor(String value) {
+        try {
+            return android.graphics.Color.parseColor(value) & 0xffffff;
+        }
+        catch (IllegalArgumentException e) {
+            return 0;
         }
     }
 }

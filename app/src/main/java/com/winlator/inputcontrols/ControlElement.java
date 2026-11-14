@@ -83,6 +83,7 @@ public class ControlElement {
     private Binding[] bindings = {Binding.NONE, Binding.NONE, Binding.NONE, Binding.NONE};
     private float scale = 1.0f;
     private float opacity = 1.0f;
+    private int color = 0; // WinPocket: optional colour of the outline and label, 0 for the default white
     private short x;
     private short y;
     private int currentPointerId = -1;
@@ -247,6 +248,15 @@ public class ControlElement {
 
     public void setOpacity(float opacity) {
         this.opacity = opacity;
+    }
+
+    public int getColor() {
+        return color;
+    }
+
+    /** WinPocket: an RGB colour for this element instead of white, or 0 for the default. */
+    public void setColor(int color) {
+        this.color = color & 0xffffff;
     }
 
     public short getX() {
@@ -782,6 +792,7 @@ public class ControlElement {
             elementJSONObject.put("bindings", bindingsJSONArray);
             elementJSONObject.put("scale", Float.valueOf(scale));
             if (opacity < 1.0f) elementJSONObject.put("opacity", Float.valueOf(opacity));
+            if (color != 0) elementJSONObject.put("color", String.format("#%06X", color));
             elementJSONObject.put("x", (float)x / inputControlsView.getMaxWidth());
             elementJSONObject.put("y", (float)y / inputControlsView.getMaxHeight());
             elementJSONObject.put("toggleSwitch", propertyFlags.isSet(FLAG_TOGGLE_SWITCH));
@@ -1103,7 +1114,9 @@ public class ControlElement {
 
     public int getLightColor() {
         float opacity = inputControlsView.isEditMode() ? Math.max(0.15f, this.opacity) : this.opacity;
-        return Color.argb((int)(opacity * inputControlsView.getOverlayOpacity() * 255), 255, 255, 255);
+        int alpha = (int)(opacity * inputControlsView.getOverlayOpacity() * 255);
+        if (color != 0) return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color));
+        return Color.argb(alpha, 255, 255, 255);
     }
 
     public int getDarkColor() {

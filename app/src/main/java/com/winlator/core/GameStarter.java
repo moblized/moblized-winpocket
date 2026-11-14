@@ -50,13 +50,8 @@ public abstract class GameStarter {
         return hasStoragePermission(context) && RootFS.find(context).isValid() && getGameExe(context, game) != null;
     }
 
-    public static boolean isRelativeMouse(SharedPreferences preferences, GameProfile game) {
-        return preferences.getBoolean(game.pref(GameSetup.PREF_RELATIVE_MOUSE), game.defaultRelativeMouse);
-    }
-
-    /** "Tap where you touch" and mouse look exclude each other; mouse look wins. */
     public static boolean isTouchscreenMode(SharedPreferences preferences, GameProfile game) {
-        return !isRelativeMouse(preferences, game) && preferences.getBoolean(game.touchscreenModePref(), game.defaultTouchscreenMode);
+        return preferences.getBoolean(game.touchscreenModePref(), game.defaultTouchscreenMode);
     }
 
     /** The home screen's settings for this game, as saved. Imports the touch layout if needed. */
@@ -74,9 +69,7 @@ public abstract class GameStarter {
         options.screenMode = Math.max(0, Math.min(2, preferences.getInt(game.pref(GameSetup.PREF_SCREEN_MODE), GameSetup.SCREEN_MODE_WIDE)));
         options.wideScreenSize = GameSetup.getWideScreenSize(context);
         options.floatingStick = preferences.getBoolean(game.pref(GameSetup.PREF_FLOATING_STICK), true);
-        options.relativeMouse = isRelativeMouse(preferences, game);
         options.touchscreenMode = isTouchscreenMode(preferences, game);
-        options.useSteam = game.supportsSteam() && preferences.getBoolean(game.pref(GameSetup.PREF_USE_STEAM), true);
         return options;
     }
 

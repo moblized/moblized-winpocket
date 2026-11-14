@@ -30,8 +30,8 @@ import java.util.Locale;
 /**
  * WinPocket addition (not part of upstream Winlator).
  * One-tap setup for the PC games in {@link GameProfile}: locates the game folder the user copied
- * to the phone, prepares a dedicated container, writes a shortcut for it, moves save files in and
- * out and, for games that need it, starts the Steam client before the game.
+ * to the phone, prepares a dedicated container, writes a shortcut for it, and moves save files
+ * in and out.
  */
 public abstract class GameSetup {
     public static final String PREF_SELECTED_GAME = "winpocket_selected_game";
@@ -41,8 +41,6 @@ public abstract class GameSetup {
     public static final String PREF_SCREEN_MODE = "game_screen_mode";
     public static final String PREF_FLOATING_STICK = "game_floating_joystick";
     public static final String PREF_STICK_SIZE = "game_joystick_size";
-    public static final String PREF_RELATIVE_MOUSE = "game_relative_mouse";
-    public static final String PREF_USE_STEAM = "game_use_steam";
     public static final String PREF_CONTROLS_PROFILE_VERSION = "game_controls_profile_version";
     /** Joystick size in percent; matches the scale the bundled layouts ship with. */
     public static final int DEFAULT_STICK_SIZE = 130;
@@ -52,16 +50,7 @@ public abstract class GameSetup {
     public static final int SCREEN_MODE_STRETCH = 1;
     /** The container renders at its own size with black bars. */
     public static final int SCREEN_MODE_BARS = 2;
-    /** Valve's official Steam installer for Windows. */
-    public static final String STEAM_SETUP_URL = "https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe";
-    public static final String STEAM_SETUP_FILENAME = "SteamSetup.exe";
-    /** Steam's web views need no GPU and no sandbox this way, which is what works under Wine. */
-    public static final String STEAM_ARGS = "-no-cef-sandbox -cef-disable-gpu -cef-disable-gpu-compositing";
-    public static final String STEAM_SHORTCUT_NAME = "Steam";
-    public static final String STEAM_SETUP_SHORTCUT_NAME = "Steam Setup";
     private static final String SCREEN_ARGS_PATTERN = "\\s*-screen-(?:width|height|fullscreen)\\s+\\d+";
-    private static final String WINPOCKET_DIR = "winpocket";
-    private static final String[] STEAM_EXE_PATHS = {"Program Files (x86)/Steam/steam.exe", "Program Files/Steam/steam.exe"};
     private static final byte MAX_SCAN_DEPTH = 5;
 
     /** Settings the home screen passes to {@link #writeShortcut}. */
@@ -72,8 +61,6 @@ public abstract class GameSetup {
         public String wideScreenSize;
         public boolean floatingStick;
         public boolean touchscreenMode;
-        public boolean relativeMouse;
-        public boolean useSteam;
     }
 
     public static GameProfile getSelectedGame(Context context) {
@@ -214,21 +201,14 @@ public abstract class GameSetup {
     /**
      * Creates the game shortcut, or re-points an existing one at a new path while keeping any
      * per-shortcut settings the user changed. The home screen's switches are applied on every
-     * call. When Steam should start first, the shortcut runs a small batch file that does that
-     * and then starts the game.
+     * call.
      */
     public static File writeShortcut(Container container, GameProfile game, String dosPath, LaunchOptions options) {
         File file = getShortcutFile(container, game.name);
         File desktopDir = file.getParentFile();
         if (!desktopDir.isDirectory() && !desktopDir.mkdirs()) return null;
 
-        String targetPath = dosPath;
-        if (options.useSteam && game.supportsSteam() && isSteamInstalled(container)) {
-            targetPath = writeSteamLauncher(container, game, dosPath);
-            if (targetPath == null) return null;
-        }
-
-        String execLine = "Exec=env WINEPREFIX=\"/home/xuser/.wine\" wine "+escapeForDesktopExec(targetPath);
+        String execLine = "Exec=env WINEPREFIX=\"/home/xuser/.wine\" wine "+escapeForDesktopExec(dosPath);
         String wmClassLine = "StartupWMClass="+FileUtils.getName(dosPath);
         boolean isNew = !file.isFile();
 
@@ -261,34 +241,8 @@ public abstract class GameSetup {
         shortcut.putExtra("stretchFullscreen", options.screenMode == SCREEN_MODE_STRETCH ? "1" : null);
         shortcut.putExtra("floatingStick", options.floatingStick ? "1" : null);
         shortcut.putExtra("moveCursorToTouchpoint", options.touchscreenMode ? "1" : "0");
-        shortcut.putExtra("relativeMouse", options.relativeMouse ? "1" : null);
         shortcut.putExtra("controlsProfile", options.controlsProfileId > 0 ? String.valueOf(options.controlsProfileId) : null);
         shortcut.putExtra("box64Preset", options.safeMode ? Box64Preset.STABILITY : null);
-        shortcut.saveData();
-        return file;
-    }
-
-    /**
-     * Writes a plain shortcut for a helper program, such as the Steam installer or Steam itself.
-     * Taps click where you touch and no touch layout is shown, which suits ordinary windows.
-     */
-    public static File writeToolShortcut(Container container, String name, String dosPath, String execArgs, String screenSize) {
-        File file = getShortcutFile(container, name);
-        File desktopDir = file.getParentFile();
-        if (!desktopDir.isDirectory() && !desktopDir.mkdirs()) return null;
-
-        String content = "[Desktop Entry]\n" +
-                         "Name="+name+"\n" +
-                         "Exec=env WINEPREFIX=\"/home/xuser/.wine\" wine "+escapeForDesktopExec(dosPath)+"\n" +
-                         "Type=Application\n" +
-                         "StartupNotify=true\n" +
-                         "StartupWMClass="+FileUtils.getName(dosPath)+"\n";
-        if (!FileUtils.writeString(file, content)) return null;
-
-        Shortcut shortcut = new Shortcut(container, file);
-        shortcut.putExtra("execArgs", execArgs != null && !execArgs.isEmpty() ? execArgs : null);
-        shortcut.putExtra("screenSize", screenSize);
-        shortcut.putExtra("moveCursorToTouchpoint", "1");
         shortcut.saveData();
         return file;
     }
@@ -408,118 +362,5 @@ public abstract class GameSetup {
         File srcDir = getSavesExchangeDir(game);
         if (!srcDir.isDirectory() || FileUtils.isEmpty(srcDir)) return false;
         return FileUtils.copy(srcDir, getContainerSavesDir(container, game), (file) -> FileUtils.chmod(file, 0771));
-    }
-
-    public static File getDriveCDir(Container container) {
-        return new File(container.getRootDir(), ".wine/drive_c");
-    }
-
-    /** C:\winpocket inside the container, for files WinPocket writes there. */
-    public static File getWinPocketDir(Container container) {
-        return new File(getDriveCDir(container), WINPOCKET_DIR);
-    }
-
-    public static String getWinPocketDosPath(String filename) {
-        return "C:\\"+WINPOCKET_DIR+"\\"+filename;
-    }
-
-    /** The installed steam.exe, or null when Steam is not installed in this container. */
-    public static File findSteamExe(Container container) {
-        File driveC = getDriveCDir(container);
-        for (String path : STEAM_EXE_PATHS) {
-            File file = new File(driveC, path);
-            if (file.isFile()) return file;
-        }
-        return null;
-    }
-
-    public static boolean isSteamInstalled(Container container) {
-        return findSteamExe(container) != null;
-    }
-
-    public static String getSteamDosPath(Container container) {
-        File steamExe = findSteamExe(container);
-        if (steamExe == null) return null;
-        String relative = steamExe.getPath().substring(getDriveCDir(container).getPath().length());
-        return "C:"+relative.replace("/", "\\");
-    }
-
-    /**
-     * Writes C:\winpocket\(game id)_steam.bat, which starts Steam in the background, waits until
-     * an account is signed in, then starts the game with the arguments it is given and closes
-     * Steam when the game exits. Returns the batch file's Windows path, or null on failure.
-     */
-    public static String writeSteamLauncher(Container container, GameProfile game, String gameDosPath) {
-        String steamDosPath = getSteamDosPath(container);
-        if (steamDosPath == null) return null;
-
-        File dir = getWinPocketDir(container);
-        if (!dir.isDirectory() && !dir.mkdirs()) return null;
-
-        String filename = game.id+"_steam.bat";
-        String script = buildSteamLauncherScript(steamDosPath, gameDosPath, game.steamAppId);
-        if (!FileUtils.writeString(new File(dir, filename), script)) return null;
-        return getWinPocketDosPath(filename);
-    }
-
-    /**
-     * Writes C:\winpocket\steam_setup.bat, which runs the Steam installer without questions and
-     * then opens Steam with the arguments that suit Wine. Returns its Windows path, or null.
-     */
-    public static String writeSteamSetupScript(Container container) {
-        File dir = getWinPocketDir(container);
-        if (!dir.isDirectory() && !dir.mkdirs()) return null;
-
-        String filename = "steam_setup.bat";
-        String[] lines = {
-            "@echo off",
-            "rem Written by WinPocket. Installs Steam, then opens it so you can sign in.",
-            "echo Installing Steam. This takes a minute or two.",
-            "\""+getWinPocketDosPath(STEAM_SETUP_FILENAME)+"\" /S",
-            "set \"STEAM_EXE=C:\\Program Files (x86)\\Steam\\steam.exe\"",
-            "if not exist \"%STEAM_EXE%\" set \"STEAM_EXE=C:\\Program Files\\Steam\\steam.exe\"",
-            "if not exist \"%STEAM_EXE%\" goto failed",
-            "echo Opening Steam. It updates itself first, which can take several minutes.",
-            "start \"\" \"%STEAM_EXE%\" "+STEAM_ARGS,
-            "goto end",
-            ":failed",
-            "echo Steam did not install. Exit from the side menu and try again.",
-            "pause",
-            ":end",
-        };
-        if (!FileUtils.writeString(new File(dir, filename), String.join("\r\n", lines)+"\r\n")) return null;
-        return getWinPocketDosPath(filename);
-    }
-
-    public static String buildSteamLauncherScript(String steamDosPath, String gameDosPath, int steamAppId) {
-        int index = gameDosPath.lastIndexOf('\\');
-        String gameDir = index != -1 ? gameDosPath.substring(0, index) : gameDosPath;
-        String gameExe = index != -1 ? gameDosPath.substring(index + 1) : gameDosPath;
-        if (gameDir.endsWith(":")) gameDir += "\\";
-
-        String[] lines = {
-            "@echo off",
-            "rem Written by WinPocket. Starts Steam, waits until you are signed in, then starts the game.",
-            "set \"STEAM_EXE="+steamDosPath+"\"",
-            "echo Starting Steam. Sign in if Steam asks you to. The game starts when Steam is ready.",
-            "start \"\" \"%STEAM_EXE%\" -silent "+STEAM_ARGS,
-            "set /a TRIES=0",
-            ":wait",
-            "set \"ACTIVE_USER=\"",
-            "for /f \"tokens=1,2,3\" %%a in ('reg query \"HKCU\\Software\\Valve\\Steam\\ActiveProcess\" /v ActiveUser 2^>nul') do if /i \"%%a\"==\"ActiveUser\" set \"ACTIVE_USER=%%c\"",
-            "if not \"%ACTIVE_USER%\"==\"\" if not \"%ACTIVE_USER%\"==\"0x0\" goto game",
-            "set /a TRIES+=1",
-            "if %TRIES% GEQ 300 goto game",
-            "timeout /t 2 /nobreak >nul 2>&1 || ping -n 3 127.0.0.1 >nul",
-            "goto wait",
-            ":game",
-            "echo Starting the game.",
-            "set SteamAppId="+steamAppId,
-            "set SteamGameId="+steamAppId,
-            "cd /d \""+gameDir+"\"",
-            "\""+gameExe+"\" %*",
-            "start \"\" \"%STEAM_EXE%\" -shutdown",
-        };
-        return String.join("\r\n", lines)+"\r\n";
     }
 }
