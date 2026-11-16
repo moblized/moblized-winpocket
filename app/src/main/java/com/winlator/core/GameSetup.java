@@ -42,6 +42,14 @@ public abstract class GameSetup {
     public static final String PREF_FLOATING_STICK = "game_floating_joystick";
     public static final String PREF_STICK_SIZE = "game_joystick_size";
     public static final String PREF_CONTROLS_PROFILE_VERSION = "game_controls_profile_version";
+    public static final String PREF_BUTTON_SIZE = "game_button_size";
+    /** The sizes last written into the installed layout, so a slider only acts when it moves. */
+    public static final String PREF_STICK_SIZE_APPLIED = "game_joystick_size_applied";
+    public static final String PREF_BUTTON_SIZE_APPLIED = "game_button_size_applied";
+    /** Button size in percent of what the layout holds. */
+    public static final int DEFAULT_BUTTON_SIZE = 100;
+    private static final double MIN_ELEMENT_SCALE = 0.3;
+    private static final double MAX_ELEMENT_SCALE = 5.0;
     /** Joystick size in percent; matches the scale the bundled layouts ship with. */
     public static final int DEFAULT_STICK_SIZE = 130;
     /** The container renders at the phone's own shape, so the picture fills the screen. */
@@ -289,65 +297,135 @@ public abstract class GameSetup {
     }
 
     /**
-     * Returns the id of the game's bundled touch layout. Imports it on first use, and replaces
-     * the installed copy when a newer layout ships with the app. 0 on failure.
+     * Returns the id of the game's touch layout. Imports the bundled one on first use, and
+     * replaces the installed copy when a newer layout ships with the app, unless the user has
+     * edited theirs. 0 on failure.
      */
     public static int ensureControlsProfile(Context context, GameProfile game) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String versionKey = game.pref(PREF_CONTROLS_PROFILE_VERSION);
         boolean isOutdated = preferences.getInt(versionKey, 0) < game.controlsProfileVersion;
         InputControlsManager manager = new InputControlsManager(context);
-        ControlsProfile installed = null;
-
-        for (ControlsProfile profile : manager.getProfiles()) {
-            if (profile.getName().equals(game.controlsProfileName)) {
-                installed = profile;
-                break;
-            }
-        }
+        ControlsProfile installed = findInstalledProfile(manager, game);
 
         if (installed != null && !isOutdated) return installed.id;
 
+        if (installed != null && ControlsProfile.isEditedByUser(context, installed.id)) {
+            // The user's own layout wins; "Reset layout" brings the bundled one back
+            preferences.edit().putInt(versionKey, game.controlsProfileVersion).apply();
+            return installed.id;
+        }
+
+        int profileId = installBundledProfile(context, game, manager, installed);
+        return profileId > 0 ? profileId : (installed != null ? installed.id : 0);
+    }
+
+    /** Throws away the installed layout and puts the bundled one back. 0 on failure. */
+    public static int resetControlsProfile(Context context, GameProfile game) {
+        InputControlsManager manager = new InputControlsManager(context);
+        return installBundledProfile(context, game, manager, findInstalledProfile(manager, game));
+    }
+
+    private static ControlsProfile findInstalledProfile(InputControlsManager manager, GameProfile game) {
+        for (ControlsProfile profile : manager.getProfiles()) {
+            if (profile.getName().equals(game.controlsProfileName)) return profile;
+        }
+        return null;
+    }
+
+    private static int installBundledProfile(Context context, GameProfile game, InputControlsManager manager, ControlsProfile installed) {
         try {
             JSONObject data = new JSONObject(FileUtils.readString(context, game.controlsProfileAsset));
             if (installed != null) manager.removeProfile(installed);
             ControlsProfile profile = manager.importProfile(data);
             if (profile == null) return 0;
 
-            preferences.edit().putInt(versionKey, game.controlsProfileVersion).apply();
+            // A fresh layout: nobody has edited it, and the size sliders have not touched it yet
+            ControlsProfile.clearEditedByUser(context, profile.id);
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putInt(game.pref(PREF_CONTROLS_PROFILE_VERSION), game.controlsProfileVersion)
+                .remove(game.pref(PREF_STICK_SIZE_APPLIED))
+                .remove(game.pref(PREF_BUTTON_SIZE_APPLIED))
+                .apply();
             return profile.id;
         }
         catch (Exception e) {
-            return installed != null ? installed.id : 0;
+            return 0;
         }
     }
 
-    /** Sets the size of every joystick in an installed layout. Size is in percent. */
-    public static boolean applyStickSize(Context context, int profileId, int sizePercent) {
+    /**
+     * Makes the game's touch layout ready to use or edit: installs it when needed, then writes
+     * the joystick and button sizes into it, but only the ones whose slider moved since last
+     * time. That way sizes and positions set in the layout editor stay as they are.
+     * Returns the layout's id, 0 on failure.
+     */
+    public static int prepareControls(Context context, GameProfile game) {
+        int profileId = ensureControlsProfile(context, game);
+        if (profileId <= 0) return profileId;
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        int stickSize = preferences.getInt(game.pref(PREF_STICK_SIZE), DEFAULT_STICK_SIZE);
+        int stickApplied = preferences.getInt(game.pref(PREF_STICK_SIZE_APPLIED), -1);
+        int buttonSize = preferences.getInt(game.pref(PREF_BUTTON_SIZE), DEFAULT_BUTTON_SIZE);
+        int buttonApplied = preferences.getInt(game.pref(PREF_BUTTON_SIZE_APPLIED), DEFAULT_BUTTON_SIZE);
+        if (stickSize == stickApplied && buttonSize == buttonApplied) return profileId;
+
         try {
             File file = ControlsProfile.getProfileFile(context, profileId);
             JSONObject data = new JSONObject(FileUtils.readString(file));
-            String updated = setStickScale(data, sizePercent / 100.0);
-            return updated == null || FileUtils.writeString(file, updated);
+            boolean changed = false;
+            if (stickSize != stickApplied) changed |= setMainStickScale(data, stickSize / 100.0);
+            if (buttonSize != buttonApplied) changed |= multiplyButtonScale(data, buttonSize / (double)Math.max(1, buttonApplied));
+            if (changed && !FileUtils.writeString(file, data.toString())) return profileId;
+
+            preferences.edit()
+                .putInt(game.pref(PREF_STICK_SIZE_APPLIED), stickSize)
+                .putInt(game.pref(PREF_BUTTON_SIZE_APPLIED), buttonSize)
+                .apply();
         }
-        catch (Exception e) {
-            return false;
-        }
+        catch (Exception e) {}
+        return profileId;
     }
 
-    /** Returns the new layout text, or null when every joystick already has that scale. */
-    public static String setStickScale(JSONObject data, double scale) throws JSONException {
+    /**
+     * Sets the scale of the movement joystick: every joystick on the left half of the screen.
+     * A right-hand joystick keeps its own size. Returns true when something changed.
+     */
+    public static boolean setMainStickScale(JSONObject data, double scale) throws JSONException {
         JSONArray elements = data.getJSONArray("elements");
         boolean changed = false;
 
         for (int i = 0; i < elements.length(); i++) {
             JSONObject element = elements.getJSONObject(i);
-            if (element.optString("type").equals("STICK") && Math.abs(element.optDouble("scale", 1.0) - scale) > 0.001) {
+            if (!element.optString("type").equals("STICK") || element.optDouble("x", 0) > 0.5) continue;
+            if (Math.abs(element.optDouble("scale", 1.0) - scale) > 0.001) {
                 element.put("scale", scale);
                 changed = true;
             }
         }
-        return changed ? data.toString() : null;
+        return changed;
+    }
+
+    /**
+     * Multiplies the scale of every button, so buttons the user sized one by one keep their
+     * proportions. Returns true when something changed.
+     */
+    public static boolean multiplyButtonScale(JSONObject data, double factor) throws JSONException {
+        JSONArray elements = data.getJSONArray("elements");
+        boolean changed = false;
+
+        for (int i = 0; i < elements.length(); i++) {
+            JSONObject element = elements.getJSONObject(i);
+            if (!element.optString("type").equals("BUTTON")) continue;
+            double oldScale = element.optDouble("scale", 1.0);
+            double newScale = Math.max(MIN_ELEMENT_SCALE, Math.min(MAX_ELEMENT_SCALE, Math.round(oldScale * factor * 1000.0) / 1000.0));
+            if (Math.abs(newScale - oldScale) > 0.001) {
+                element.put("scale", newScale);
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     /** Copies the container's save folder to Download/WinPocket/saves. Background thread. */

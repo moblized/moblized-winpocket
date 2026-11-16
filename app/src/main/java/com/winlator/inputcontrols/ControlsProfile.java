@@ -3,6 +3,7 @@ package com.winlator.inputcontrols;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import com.winlator.core.FileUtils;
 import com.winlator.widget.InputControlsView;
@@ -127,8 +128,21 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
         return elementsLoaded;
     }
 
+    // WinPocket: save() only runs when a layout is changed through the app's own screens, so it
+    // marks the layout as the user's. An app update then leaves it alone.
+    private static final String EDITED_BY_USER_PREFIX = "winpocket_layout_edited_";
+
+    public static boolean isEditedByUser(Context context, int profileId) {
+        return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(EDITED_BY_USER_PREFIX+profileId, false);
+    }
+
+    public static void clearEditedByUser(Context context, int profileId) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().remove(EDITED_BY_USER_PREFIX+profileId).apply();
+    }
+
     public void save() {
         File file = getProfileFile(context, id);
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(EDITED_BY_USER_PREFIX+id, true).apply();
 
         try {
             JSONObject data = new JSONObject();

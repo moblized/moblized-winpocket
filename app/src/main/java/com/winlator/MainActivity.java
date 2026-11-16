@@ -26,11 +26,13 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
 import com.winlator.contentdialog.AboutDialog;
+import com.winlator.core.AppUpdater;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 import com.winlator.core.GameShortcuts;
 import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.xenvironment.RootFS;
 import com.winlator.xenvironment.RootFSInstaller;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -83,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
             navigationView.setCheckedItem(menuItemId);
             if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);
+            if (RootFS.find(this).isValid()) AppUpdater.checkOnStart(this); // WinPocket
 
             int containerId = intent.getIntExtra("container_id", 0);
             String startPath = intent.getStringExtra("start_path");

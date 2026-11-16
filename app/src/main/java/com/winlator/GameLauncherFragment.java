@@ -26,6 +26,8 @@ import androidx.preference.PreferenceManager;
 
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.contentdialog.ContentDialog;
+import com.winlator.core.AppUpdater;
 import com.winlator.core.AppUtils;
 import com.winlator.core.FileUtils;
 import com.winlator.core.GameProfile;
@@ -60,6 +62,7 @@ public class GameLauncherFragment extends Fragment {
     private Spinner sScreenMode;
     private CheckBox cbFloatingStick;
     private SeekBar sbStickSize;
+    private SeekBar sbButtonSize;
     private CheckBox cbTouchscreenMode;
     private File exeFile;
 
@@ -95,6 +98,19 @@ public class GameLauncherFragment extends Fragment {
 
         sbStickSize = view.findViewById(R.id.SBStickSize);
         sbStickSize.setOnValueChangeListener((seekBar, value) -> preferences.edit().putInt(game.pref(GameSetup.PREF_STICK_SIZE), Math.round(value)).apply());
+
+        sbButtonSize = view.findViewById(R.id.SBButtonSize);
+        sbButtonSize.setOnValueChangeListener((seekBar, value) -> preferences.edit().putInt(game.pref(GameSetup.PREF_BUTTON_SIZE), Math.round(value)).apply());
+
+        view.findViewById(R.id.BTEditLayout).setOnClickListener((v) -> editLayout());
+        view.findViewById(R.id.BTResetLayout).setOnClickListener((v) -> resetLayout());
+
+        String buildLabel = AppUpdater.getBuildLabel(context);
+        ((TextView)view.findViewById(R.id.TVBuild)).setText(getString(R.string.build_label)+" "+(buildLabel != null ? buildLabel : "-"));
+        CheckBox cbAutoUpdate = view.findViewById(R.id.CBAutoUpdate);
+        cbAutoUpdate.setChecked(preferences.getBoolean(AppUpdater.PREF_AUTO_UPDATE, true));
+        cbAutoUpdate.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(AppUpdater.PREF_AUTO_UPDATE, isChecked).apply());
+        view.findViewById(R.id.BTCheckForUpdates).setOnClickListener((v) -> AppUpdater.check(getActivity(), true));
 
         cbTouchscreenMode = view.findViewById(R.id.CBTouchscreenMode);
         cbTouchscreenMode.setOnCheckedChangeListener((v, isChecked) -> preferences.edit().putBoolean(game.touchscreenModePref(), isChecked).apply());
@@ -165,6 +181,7 @@ public class GameLauncherFragment extends Fragment {
         cbTouchControls.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_TOUCH_CONTROLS), true));
         cbFloatingStick.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_FLOATING_STICK), true));
         sbStickSize.setValue(preferences.getInt(game.pref(GameSetup.PREF_STICK_SIZE), GameSetup.DEFAULT_STICK_SIZE));
+        sbButtonSize.setValue(preferences.getInt(game.pref(GameSetup.PREF_BUTTON_SIZE), GameSetup.DEFAULT_BUTTON_SIZE));
         cbTouchscreenMode.setChecked(GameStarter.isTouchscreenMode(preferences, game));
         sScreenMode.setSelection(Math.max(0, Math.min(2, preferences.getInt(game.pref(GameSetup.PREF_SCREEN_MODE), GameSetup.SCREEN_MODE_WIDE))));
         cbSafeMode.setChecked(preferences.getBoolean(game.pref(GameSetup.PREF_SAFE_MODE), false));
@@ -238,6 +255,29 @@ public class GameLauncherFragment extends Fragment {
             return;
         }
         GameStarter.start(getActivity(), game, preloaderDialog, null, this::showError);
+    }
+
+    /** Opens the layout editor on this game's buttons, with the current slider sizes applied. */
+    private void editLayout() {
+        final Context context = getContext();
+        int profileId = GameSetup.prepareControls(context, game);
+        if (profileId <= 0) {
+            showError(R.string.unable_to_open_layout);
+            return;
+        }
+
+        Intent intent = new Intent(context, ControlsEditorActivity.class);
+        intent.putExtra("profile_id", profileId);
+        startActivity(intent);
+    }
+
+    private void resetLayout() {
+        final Context context = getContext();
+        final GameProfile resetGame = game;
+        ContentDialog.confirm(context, R.string.reset_layout_confirm, () -> {
+            boolean success = GameSetup.resetControlsProfile(context, resetGame) > 0;
+            showError(success ? R.string.layout_was_reset : R.string.unable_to_open_layout);
+        });
     }
 
     private void addToHomeScreen() {

@@ -12,6 +12,12 @@ The game is not included. You need your own copy.
 2. Install it. If the official Winlator app is installed, uninstall it first: both apps use the package name `com.winlator`, so only one can be on the phone.
 3. Open WinPocket, allow storage access, and wait for the system files to install.
 
+## Updates
+
+WinPocket checks this repo's latest release when it opens, at most once every two hours. When a newer build exists it asks, downloads the APK (about 160 MB) and hands it to Android's installer; you confirm the install there. The first time, Android asks you to allow WinPocket to install apps. Your containers, saves and settings stay.
+
+The check can be switched off, or run by hand, under **App updates** at the bottom of the Game screen. A build installed before this feature has to be updated by hand once.
+
 ## Home screen shortcuts
 
 Once the game is found, tap **Add to home screen**. The shortcut starts the game straight away, with the settings from WinPocket's game screen at the time you tap it, so change a setting in WinPocket and the shortcut picks it up.
@@ -53,10 +59,13 @@ These are the game's default controller buttons. If you remapped the controller 
 
 - **On-screen touch controls** shows those buttons. Untick it if you play with a real controller.
 - **Floating joystick** puts the left stick under your thumb: touch anywhere on the left half of the screen that is not a button, and it appears there. It returns to its place when you lift your finger. The small right stick stays where it is.
-- **Joystick size** sets how big both sticks are, from 50% to 250%.
+- **Joystick size** sets how big the left stick is, from 50% to 250%. The small right stick keeps its own size.
+- **Button size** makes every button bigger or smaller at once, from 50% to 250%.
+- **Edit layout** opens the button editor on this game's layout. Drag a button to move it. To resize one button, tap it, open its settings in the toolbox and change Scale.
+- **Reset layout** puts the original layout back.
 - **Tap where you touch** makes a tap act at the spot you touch, instead of steering a mouse pointer like a trackpad. It is the same setting as "Move Cursor to Touchpoint" in Settings.
 - A Bluetooth or USB controller works through Winlator's gamepad support.
-- To move or resize the buttons, open the side menu, then Input Controls, and edit the profile "Hollow Knight (touch)". An app update that ships a new layout replaces that profile.
+- The sliders only change the layout when you move them, so sizes and positions you set in the editor stay. Once you have edited the layout, app updates leave it alone; use Reset layout to get a new bundled layout.
 
 ## Screen
 
@@ -89,6 +98,8 @@ Changes made to Winlator 11.2 (upstream commit `2c33741`), November 2026:
 - Screen modes on the home screen, including a stretch mode that can be on from launch (`GLRenderer.setFullscreen`), and correct touch mapping while stretched (`TouchpadView`).
 - A joystick bound to keys works as an 8-way stick (`ControlElement`).
 - A floating joystick option (`InputControlsView`) that only ever moves a stick on the left half, and a joystick size setting.
+- A button size setting, and Edit layout / Reset layout on the home screen. A layout the user has edited is marked (`ControlsProfile.save`) and is not replaced by app updates.
+- In-app updates from this repo's latest release (`AppUpdater`). CI stamps each build with its commit and publishes `version.txt` next to the APK.
 - New name and launcher icon. The icon has a light and a dark version and follows the app theme in Settings.
 - The Winlator logo is replaced by the app name in the side menu, and About credits Winlator.
 - Builds are signed with one fixed key and built by GitHub Actions.

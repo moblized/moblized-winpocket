@@ -31,6 +31,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Stamp the build with its commit
+        run: echo "$GITHUB_SHA" > app/src/main/assets/winpocket/build_sha.txt
+
       - name: Build
         run: |
           chmod +x gradlew
@@ -40,6 +43,7 @@ jobs:
         run: |
           mkdir -p out
           cp app/build/outputs/apk/debug/app-debug.apk out/WinPocket.apk
+          echo "$GITHUB_SHA" > out/version.txt
           ls -la out
 
       - uses: actions/upload-artifact@v4
@@ -54,6 +58,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest out/WinPocket.apk \
+          gh release create latest out/WinPocket.apk out/version.txt \
             --title "Latest build" \
             --notes "Built from ${GITHUB_SHA}. Install WinPocket.apk on the phone."

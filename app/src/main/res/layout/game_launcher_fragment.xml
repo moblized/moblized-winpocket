@@ -86,6 +86,47 @@
             app:maxValue="250"
             app:step="10" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/button_size" />
+
+        <com.winlator.widget.SeekBar
+            android:id="@+id/SBButtonSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:suffix="%"
+            app:minValue="50"
+            app:maxValue="250"
+            app:step="10" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTEditLayout"
+                android:text="@string/edit_layout" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTResetLayout"
+                android:layout_marginLeft="8dp"
+                android:text="@string/reset_layout" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorSecondaryText"
+            android:text="@string/edit_layout_help" />
+
         <CheckBox
             android:id="@+id/CBTouchscreenMode"
             android:layout_width="wrap_content"
@@ -179,5 +220,35 @@
             android:layout_marginTop="4dp"
             android:textSize="14sp"
             android:textColor="?attr/colorSecondaryText" />
+
+        <View style="@style/HorizontalLine"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/app_updates" />
+
+        <TextView
+            android:id="@+id/TVBuild"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorSecondaryText" />
+
+        <CheckBox
+            android:id="@+id/CBAutoUpdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/check_for_updates_on_start" />
+
+        <Button
+            style="@style/ButtonNeutral"
+            android:id="@+id/BTCheckForUpdates"
+            android:layout_marginTop="8dp"
+            android:text="@string/check_for_updates" />
     </LinearLayout>
 </ScrollView>

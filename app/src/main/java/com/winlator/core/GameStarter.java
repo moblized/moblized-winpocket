@@ -60,9 +60,7 @@ public abstract class GameStarter {
         GameSetup.LaunchOptions options = new GameSetup.LaunchOptions();
 
         if (preferences.getBoolean(game.pref(GameSetup.PREF_TOUCH_CONTROLS), true)) {
-            options.controlsProfileId = GameSetup.ensureControlsProfile(context, game);
-            int stickSize = preferences.getInt(game.pref(GameSetup.PREF_STICK_SIZE), GameSetup.DEFAULT_STICK_SIZE);
-            if (options.controlsProfileId > 0) GameSetup.applyStickSize(context, options.controlsProfileId, stickSize);
+            options.controlsProfileId = GameSetup.prepareControls(context, game);
         }
 
         options.safeMode = preferences.getBoolean(game.pref(GameSetup.PREF_SAFE_MODE), false);

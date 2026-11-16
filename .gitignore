@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# written by CI, see .github/workflows/build.yml
+app/src/main/assets/winpocket/build_sha.txt
